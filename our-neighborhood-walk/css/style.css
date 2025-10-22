@@ -1,0 +1,208 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+#map { 
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 60%;
+}
+.quote {
+    display:flex;
+    box-shadow: 0 0 5px rgba(20,20,20,0.5);
+    border-left: 0.5em solid green;
+    margin:10px;
+}
+.stop::before {
+    content:'';
+    display:block;
+    flex: 0 0 40%;
+    padding-left:0.5em;
+    background:url('../assets/Faces/happy-pup.png');
+    /* background-repeat: no-repeat; */
+    background-size:cover;
+    background-position:center;
+}
+.dog.sad::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/pup-sad.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.dog.frown::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/pup-frown.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.dog.neutral::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/pup-neutral.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.dog.smile::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/pup-smile.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.dog.happy::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/pup-happy.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.person.sad::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/person-sad.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.person.frown::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/person-frown.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.person.neutral::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/person-neutral.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.person.smile::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/person-smile.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+.person.happy::before {
+    content:'';
+    display:block;
+    flex: 0 0 15%;
+    margin-left:1em;
+    padding-top:4em;
+    padding-bottom:4em;
+    background:url('../assets/Faces/person-happy.png');
+    background-repeat: no-repeat;
+    background-size:contain;
+    background-position:right;
+}
+blockquote {
+    font-size:16px;
+}
+blockquote:before,blockquote:after {
+    display:inline;
+    font-size:20px;
+    height:0.5em;
+    overflow:hidden;   
+    position:relative;
+    top:-0.15em;
+    color:orange;
+    margin-bottom:-0.15em;
+}
+blockquote:before {
+    float:left;
+    padding-right:10px;
+    content:'“';
+}
+blockquote:after {
+    content:'”';
+    display:inline-block;
+    padding-left:10px;
+    vertical-align:top;
+}
+#features {
+    width: 40%;
+    margin-left: 60%;
+    font-family: sans-serif;
+    overflow-y: scroll;
+    background-color: #fafafa;
+}
+section {
+    padding: 25px 50px;
+    line-height: 25px;
+    border-bottom: 1px solid #ddd;
+    opacity: 0.25;
+    font-size: 13px;
+}
+section.active {
+    opacity: 1;
+}
+section:last-child {
+    border-bottom: none;
+    margin-bottom: 200px;
+}
+.photo {
+    height: 40vh; /* Sets the image height to 40% of the viewport height */
+    width: auto; /* Allows the width to adjust automatically to maintain aspect ratio */
+}
+.face {
+    display: block;
+    margin: auto;
+    width: 50%;
+}
+.mapboxgl-popup-content {
+    box-shadow: 0 0 5px rgba(20,20,20,0.5);
+    border-left: 0.5em solid green;
+    background-color: #ffffffc6; /* White background for the popup */
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+}
