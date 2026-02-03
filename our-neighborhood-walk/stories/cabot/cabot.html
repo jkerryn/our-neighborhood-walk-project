@@ -25,141 +25,6 @@
             </p>
             <img src="../../img/sunset-village-madison-wi.jpg" class="photo" alt="sunset-village"><br>
         </section>
-        <section id="stop1">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop2">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop3">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop4">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop5">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop6">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop7">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop8">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop9">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop10">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop11">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop12">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop13">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop14">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
-        <section id="stop15">
-            <h2></h2>
-            <div class="quote dog">
-                <blockquote></blockquote>
-            </div>
-            <div class="quote person">
-                <blockquote></blockquote>
-            </div>
-        </section>
         <section id="outro">
             <h1>That concludes your Sunset Village Neighborhood walking tour</h1>
             <p>
@@ -311,6 +176,40 @@
                     if (targetDiv && document.activeElement !== targetDiv) {
                         targetDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
+
+                    //auto create stop html elements
+                    var bigSect = document.getElementById('features')
+                    var outro = document.getElementById("outro")
+
+                    bigSect.removeChild(outro)
+
+                    for (feat in geojsonData.features) {
+                        var idName = 'stop' + String(Number(feat) + 1)
+                        var newSect = document.createElement("section")
+                        newSect.id = idName
+                        var h2Tag = document.createElement("h2")
+
+                        var dogTag = document.createElement("div")
+                        dogTag.classList.add('quote')
+                        dogTag.classList.add('dog')
+
+                        var blockquoteTag = document.createElement('blockquote')
+                        dogTag.appendChild(blockquoteTag)
+
+                        var personTag = document.createElement("div")
+                        personTag.classList.add('quote')
+                        personTag.classList.add('person')
+
+                        var blockquoteTag = document.createElement('blockquote')
+                        personTag.appendChild(blockquoteTag)
+
+                        newSect.appendChild(h2Tag)
+                        newSect.appendChild(dogTag)
+                        newSect.appendChild(personTag)
+                        bigSect.appendChild(newSect)
+                    }
+
+                    bigSect.appendChild(outro)
 
                     const emotMap = {
                         1: 'sad',
