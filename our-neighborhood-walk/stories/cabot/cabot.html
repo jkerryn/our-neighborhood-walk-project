@@ -47,6 +47,7 @@
             padding: 20 // Optional: adds padding to the bounds so they don't touch the edge of the map
         });
 
+        var chapters = {}
         fetch('data/R_1L0xQ5tCBthP53o/R_1L0xQ5tCBthP53o.csv')
             .then(response => response.text())
             .then(csvText => {
@@ -232,125 +233,20 @@
                     }
 
                 });
+                // dynamically create chapters
+                for (feat in geojsonData.features) {
+                    var stopNum = 'stop' + String(Number(feat) + 1)
+                    var tempObj = {
+                        duration: 2000,
+                        zoom: 18,
+                        center: geojsonData.features[feat].geometry.coordinates,
+                        pitch: 20,
+                        bearing: 0
+                    }
+                    chapters[stopNum] = tempObj
+                }
             })
             .catch(error => console.error('Error fetching CSV:', error));
-
-        // todo: automate center coordinates for stops
-        const chapters = {
-            'stop0': {
-                bearing: 0,
-                duration: 2000,
-                center: [-89.4445418354252, 43.06736273080357],
-                zoom: 15,
-                pitch: 0
-            },
-            'stop1': {
-                bearing: 180,
-                duration: 2000,
-                center: [-89.437417, 43.07177],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop2': {
-                bearing: 270,
-                duration: 2000,
-                center: [-89.437417, 43.07177],
-                zoom: 18,
-                pitch: 40
-            },
-            'stop3': {
-                bearing: 90,
-                duration: 2000,
-                center: [-89.437329, 43.0714], // adjusted from snapped photos
-                //center: [-89.43718056, 43.07146389],
-                zoom: 18,
-                pitch: 40
-            },
-            'stop4': {
-                bearing: 0,
-                duration: 2000,
-                center: [-89.437621, 43.071425],
-                zoom: 17,
-                pitch: 20
-            },
-            'stop5': {
-                bearing: 270,
-                duration: 2000,
-                center: [-89.4382, 43.069925],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop6': {
-                bearing: 270,
-                duration: 2000,
-                center: [-89.438137, 43.069968],
-                zoom: 17,
-                pitch: 30
-            },
-            'stop7': {
-                bearing: 180,
-                duration: 2000,
-                center: [-89.44047, 43.06863],
-                zoom: 17.3,
-                pitch: 40
-            },
-            'stop8': {
-                bearing: 180,
-                duration: 2000,
-                center: [-89.440469, 43.068652],
-                zoom: 17.5,
-                pitch: 20
-            },
-            'stop9': {
-                bearing: 180,
-                duration: 2000,
-                center: [-89.443093, 43.066437],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop10': {
-                bearing: 180,
-                duration: 2000,
-                center: [-89.442693, 43.065688],
-                zoom: 17.3,
-                pitch: 20
-            },
-            'stop11': {
-                bearing: 270,
-                duration: 2000,
-                center: [-89.443227, 43.062572],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop12': {
-                bearing: 0,
-                duration: 2000,
-                center: [-89.444571, 43.06275],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop13': {
-                bearing: 270,
-                duration: 2000,
-                center: [-89.446134, 43.065405],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop14': {
-                bearing: 0,
-                duration: 2000,
-                center: [-89.447224, 43.0659],
-                zoom: 18,
-                pitch: 20
-            },
-            'stop15': {
-                bearing: 90,
-                duration: 2000,
-                center: [-89.441668, 43.072229],
-                zoom: 17.3,
-                pitch: 20
-            }
-        };
 
         let activeChapterName = 'stop0';
         function setActiveChapter(chapterName) {
