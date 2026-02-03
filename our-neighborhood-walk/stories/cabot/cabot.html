@@ -212,6 +212,7 @@
 
                     bigSect.appendChild(outro)
 
+                    // define mapping for emotion image 
                     const emotMap = {
                         1: 'sad',
                         2: 'frown',
@@ -241,7 +242,7 @@
                         zoom: 18,
                         center: geojsonData.features[feat].geometry.coordinates,
                         pitch: 20,
-                        bearing: 0
+                        bearing: 0 //geojsonData.features[feat].properties.bearing in the future.
                     }
                     chapters[stopNum] = tempObj
                 }
