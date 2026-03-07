@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Our Neighborhood Walk</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.15.0/mapbox-gl.js"></script>
+    <script src="../../lib/papaparse.js" type="text/javascript"></script>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="features">
+        <section id="stop0" class="active">
+            <h1>Sunset Village Neighborhood Walking Tour</h1>
+            <p>
+                On November 19th, 2024 you and your pup went for a 2.68 mile walk through Sunset Village, which has been
+                described as "a cozy neighborhood on the near west side of Madison, nestled on tree-lined streets with
+                rolling hills and panoramic views." The temperature was 55°F with a real feel of 43°F due to the 16.6
+                mi/hr wind blowing from the WSW. You logged over 15k steps over the 54 minute walk, ascending 174ft and
+                logging 15 stops detailed below.
+            </p>
+            <img src="../../img/sunset-village-madison-wi.jpg" class="photo" alt="sunset-village"><br>
+        </section>
+        <section id="outro">
+            <h1>That concludes your Sunset Village Neighborhood walking tour</h1>
+            <p>
+                lorem epsum
+            </p>
+            <img src="../../img/sunset-village-madison-wi.jpg" class="photo" alt="sunset-village"><br>
+        </section>
+    </div>
+    <script>
+        
+        // ID for the walk
+        const RID = 'R_7rOPXviEZJE5DDt'
+
+        mapboxgl.accessToken = 'pk.eyJ1IjoiamtuZWxzb24zIiwiYSI6ImNscGhma3ViNjAxdTIyaW5xdjV2ZmZqY3QifQ.BVmI_Z8uK-3eDgalKUtdeA';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+            style: 'mapbox://styles/mapbox/outdoors-v12', // style URL
+            bounds: [
+                [-89.45050502840003, 43.061078760683216], // Southwest coordinates (longitude, latitude)
+                [-89.43556260580282, 43.074511483456945]  // Northeast coordinates (longitude, latitude)
+            ],
+            padding: 20 // Optional: adds padding to the bounds so they don't touch the edge of the map
+        });
+
+        var chapters = {}
+        fetch('data/'+RID+'/'+RID+'.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                const parsedData = Papa.parse(csvText, {
+                    header: true, // Treat the first row as headers
+                    dynamicTyping: true // Automatically convert numbers and booleans
+                }).data;
+
+                const geojsonFeatures = parsedData.map(row => {
+                    return {
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [row.lon, row.lat] // Ensure correct order: [longitude, latitude]
+                        },
+                        properties: row, // Include all other CSV columns as properties
+                        id: row.id // promote ID
+                    };
+                });
+
+                const geojsonData = {
+                    type: 'FeatureCollection',
+                    features: geojsonFeatures
+                };
+
+                console.log(geojsonData, "geo");
+
+                map.on('load', () => {
+
+                    map.addSource('human-route', {
+                        type: 'geojson',
+                        // Use a URL for the value for the `data` property.
+                        data: 'data/'+RID+'/'+RID+'_human_fit.geojson'
+                    });
+
+                    map.addLayer({
+                        id: 'human-route',
+                        type: 'line',
+                        slot: 'bottom',
+                        source: 'human-route',
+                        layout: {
+                            'line-cap': 'round',
+                            'line-join': 'round'
+                        },
+                        paint: {
+                            'line-width': 5,
+                            'line-blur': 0.5,
+                            'line-emissive-strength': 10,
+                            // Use a get expression (https://docs.mapbox.comhttps://docs.mapbox.com/style-spec/reference/expressions/#get)
+                            // to set the line-color to a feature property value.
+                            'line-color': [
+                                'interpolate',
+                                ['linear'], // Interpolation method (linear, exponential, cubic-bezier)
+                                ['get', 'hrt'], // The data property to interpolate on
+                                70, '#ffffcc', // Input value 70 maps to light red
+                                130, '#800026' // Input value 130 maps to dark red
+                            ],
+                        }
+                    });
+
+                    map.addSource('dog-route', {
+                        type: 'geojson',
+                        // Use a URL for the value for the `data` property.
+                        data: 'data/'+RID+'/'+RID+'_dog_fit.geojson'
+                    });
+
+                    map.addLayer({
+                        id: 'dog-route',
+                        type: 'line',
+                        slot: 'bottom',
+                        source: 'dog-route',
+                        layout: {
+                            'line-cap': 'round',
+                            'line-join': 'round'
+                        },
+                        paint: {
+                            'line-width': 5,
+                            'line-blur': 0.5,
+                            'line-emissive-strength': 10,
+                            // Use a get expression (https://docs.mapbox.comhttps://docs.mapbox.com/style-spec/reference/expressions/#get)
+                            // to set the line-color to a feature property value.
+                            'line-color': [
+                                'interpolate',
+                                ['linear'], // Interpolation method (linear, exponential, cubic-bezier)
+                                ['get', 'hrt'], // The data property to interpolate on
+                                70, '#ffffcc', // Input value 70 maps to light red
+                                130, '#800026' // Input value 130 maps to dark red
+                            ],
+                        }
+                    });
+
+                    map.addSource('csv-data', {
+                        type: 'geojson',
+                        data: geojsonData
+                    });
+
+                    map.addLayer({
+                        id: 'csv-points',
+                        type: 'circle',
+                        slot: 'top',
+                        source: 'csv-data',
+                        paint: {
+                            'circle-radius': [
+                                'case',
+                                ['boolean', ['feature-state', 'highlight'], false],
+                                10, // Highlight color
+                                6  // Default color
+                            ],
+                            'circle-opacity': [
+                                'case',
+                                ['boolean', ['feature-state', 'highlight'], false],
+                                1.0, // Highlight color
+                                0.5  // Default color
+                            ],
+                            'circle-color': [
+                                'case',
+                                ['boolean', ['feature-state', 'highlight'], false],
+                                'orange', // Highlight color
+                                'black'  // Default color
+                            ]
+                        }
+                    });
+
+                    setActiveChapter('stop0');
+                    const targetDiv = document.getElementById('stop0');
+
+                    if (targetDiv && document.activeElement !== targetDiv) {
+                        targetDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+
+                    //auto create stop html elements
+                    var bigSect = document.getElementById('features')
+                    var outro = document.getElementById("outro")
+
+                    bigSect.removeChild(outro)
+
+                    for (feat in geojsonData.features) {
+                        var idName = 'stop' + String(Number(feat) + 1)
+                        var newSect = document.createElement("section")
+                        newSect.id = idName
+                        var h2Tag = document.createElement("h2")
+
+                        var dogTag = document.createElement("div")
+                        dogTag.classList.add('quote')
+                        dogTag.classList.add('dog')
+
+                        var blockquoteTag = document.createElement('blockquote')
+                        dogTag.appendChild(blockquoteTag)
+
+                        var personTag = document.createElement("div")
+                        personTag.classList.add('quote')
+                        personTag.classList.add('person')
+
+                        var blockquoteTag = document.createElement('blockquote')
+                        personTag.appendChild(blockquoteTag)
+
+                        newSect.appendChild(h2Tag)
+                        newSect.appendChild(dogTag)
+                        newSect.appendChild(personTag)
+                        bigSect.appendChild(newSect)
+                    }
+
+                    bigSect.appendChild(outro)
+
+                    // define mapping for emotion image 
+                    const emotMap = {
+                        1: 'sad',
+                        2: 'frown',
+                        3: 'neutral',
+                        4: 'smile',
+                        5: 'happy'
+                    }
+
+                    // auto fill shell of HTML doc with content from csv
+                    for (feat in geojsonData.features) {
+                        //console.log(geojsonData.features[feat])
+                        var sect = document.getElementById("stop" + String(Number(feat) + 1))
+                        // Dynamically fill scroll content elements
+                        sect.children[0].innerHTML = "Stop #" + String(Number(feat) + 1) + " - " + geojsonData.features[feat].properties.walkText
+                        sect.children[1].classList.add(emotMap[geojsonData.features[feat].properties.dogRank])
+                        sect.children[1].children[0].innerHTML = geojsonData.features[feat].properties.dogText
+                        sect.children[2].classList.add(emotMap[geojsonData.features[feat].properties.personRank])
+                        sect.children[2].children[0].innerHTML = geojsonData.features[feat].properties.personText
+                    }
+
+                });
+                // dynamically create chapters
+                for (feat in geojsonData.features) {
+                    var stopNum = 'stop' + String(Number(feat) + 1)
+                    var tempObj = {
+                        duration: 2000,
+                        zoom: 18,
+                        center: geojsonData.features[feat].geometry.coordinates,
+                        pitch: 20,
+                        bearing: 0 //geojsonData.features[feat].properties.bearing in the future.
+                    }
+                    chapters[stopNum] = tempObj
+                }
+            })
+            .catch(error => console.error('Error fetching CSV:', error));
+
+        let activeChapterName = 'stop0';
+        function setActiveChapter(chapterName) {
+            if (chapterName === activeChapterName) return;
+
+            document.getElementById(chapterName).classList.add('active');
+            document.getElementById(activeChapterName).classList.remove('active');
+
+            activeChapterName = chapterName;
+        }
+
+        function isElementOnScreen(id) {
+            const element = document.getElementById(id);
+            const bounds = element.getBoundingClientRect();
+            return bounds.top < window.innerHeight && bounds.bottom > 0;
+        }
+
+        window.addEventListener("scrollend", (event) => {
+            for (const chapterName in chapters) {
+                if (isElementOnScreen(chapterName)) {
+                    setActiveChapter(chapterName);
+                    map.flyTo(chapters[chapterName]);
+                    break;
+                }
+            }
+        });
+
+        map.addInteraction('stops-interaction', {
+            type: 'click',
+            target: { layerId: 'csv-points' },
+            handler: (e) => {
+
+                // Copy coordinates array.
+                const coordinates = e.feature.geometry.coordinates.slice();
+                const stopId = e.feature.properties.id;
+                console.log("stopId", stopId);
+
+                document.getElementById('stop' + stopId).scrollIntoView({ behavior: 'smooth' });
+
+            }
+        });
+
+
+        let highlightedFeatureId = null;
+        // Create a new popup
+        const popup = new mapboxgl.Popup({
+            closeOnClick: false, // Keeps the popup open after clicking the map background
+            maxWidth: 'auto'
+        });
+
+        map.on('zoomstart', () => {
+            if (popup.isOpen()) {
+                popup.remove();
+            }
+        });
+
+
+        map.on('zoomend', () => {
+
+            const center = map.getCenter();
+            const screenPoint = map.project(center);
+            const features = map.queryRenderedFeatures(screenPoint, { layers: ['csv-points'] });
+            console.log("features", features);
+
+            if (highlightedFeatureId) {
+                map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
+                highlightedFeatureId = null;
+            }
+
+            if (features.length === 1) {
+                const featureToHighlight = features[0]; // Or your logic to select
+                highlightedFeatureId = featureToHighlight.properties.id;
+                console.log(highlightedFeatureId, "highlightedFeatureId");
+
+                map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
+
+                popup.setLngLat(center) // Set the popup's position
+                    .setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+                    .addTo(map); // Add the popup to the map
+            } else if (features.length > 1) {
+                var lowestId = 9999999
+                var indexId = 0
+                var counter = 0
+                for (feat in features) {
+                    if (lowestId > features[feat].properties.id) {
+                        lowestId = features[feat].properties.id
+                        indexId = counter
+                    }
+                    counter += 1
+                }
+                console.log(features[indexId].properties.id)
+                const featureToHighlight = features[indexId]; // Or your logic to select
+                highlightedFeatureId = featureToHighlight.properties.id;
+                console.log(highlightedFeatureId, "highlightedFeatureId");
+
+                map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
+
+                popup.setLngLat(center) // Set the popup's position
+                    .setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+                    .addTo(map); // Add the popup to the map
+            }
+        });
+    </script>
+
+</body>
+
+</html>
