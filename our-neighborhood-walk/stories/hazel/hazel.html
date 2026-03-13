@@ -15,22 +15,22 @@
     <div id="map"></div>
     <div id="features">
         <section id="stop0" class="active">
-            <h1>Sunset Village Neighborhood Walking Tour</h1>
+            <h1>A Neighborhood Walk with Hazel</h1>
             <p>
-                On November 19th, 2024 you and your pup went for a 2.68 mile walk through Sunset Village, which has been
-                described as "a cozy neighborhood on the near west side of Madison, nestled on tree-lined streets with
-                rolling hills and panoramic views." The temperature was 55°F with a real feel of 43°F due to the 16.6
-                mi/hr wind blowing from the WSW. You logged over 15k steps over the 54 minute walk, ascending 174ft and
+                On February 25th, 2026 you and your pup went for a X mile walk departing the Eastmorland area, which has been
+                described by the Community Association as "a cohesive neighborhood of approximately 3,200 residents on the east side of Madison, Wisconsin near Lake Monona and Olbrich Park." The temperature was X°F with a real feel of X°F due to the X
+                mi/hr wind blowing from the X. You logged over X steps over the X minute walk, ascending Xft and
                 logging 15 stops detailed below.
             </p>
-            <img src="../../img/sunset-village-madison-wi.jpg" class="photo" alt="sunset-village"><br>
+            <img src="../../img/hazel-banner.jpeg" class="photo"><br>
+            <h2>Scroll to begin!</h2>
         </section>
-        <section id="outro">
-            <h1>That concludes your Sunset Village Neighborhood walking tour</h1>
+        <section id="stop16">
+            <h1>That concludes your Neighborhood walk with Hazel</h1>
             <p>
                 lorem epsum
             </p>
-            <img src="../../img/sunset-village-madison-wi.jpg" class="photo" alt="sunset-village"><br>
+            <img src="../../img/hazel-banner.jpeg" class="photo"><br>
         </section>
     </div>
     <script>
@@ -44,13 +44,38 @@
             // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
             style: 'mapbox://styles/mapbox/outdoors-v12', // style URL
             bounds: [
-                [-89.45050502840003, 43.061078760683216], // Southwest coordinates (longitude, latitude)
-                [-89.43556260580282, 43.074511483456945]  // Northeast coordinates (longitude, latitude)
+                [-89.34667502506751, 43.09193602453072], // Southwest coordinates (longitude, latitude)
+                [-89.32344746476441, 43.10443143491689]  // Northeast coordinates (longitude, latitude)
             ],
-            padding: 20 // Optional: adds padding to the bounds so they don't touch the edge of the map
+            padding: 20, // Optional: adds padding to the bounds so they don't touch the edge of the map
         });
+        // disable all user scroll options
+        map.scrollZoom.disable();
+        map.boxZoom.disable();
+        map.doubleClickZoom.disable();
+        map.touchZoomRotate.disable();
+        map.keyboard.disable();
 
-        var chapters = {}
+        var chapters = {
+            // manually inject intro chapter
+            'stop0': {
+                bearing: 0,
+                duration: 2000,
+                center: [-89.33587718652839, 43.098159968943456],
+                padding: 20,
+                zoom: 15,
+                pitch: 0
+            },
+            // 'stop16': {
+            //     bearing: 0,
+            //     duration: 2000,
+            //     center: [-89.33587718652839, 43.098159968943456],
+            //     padding: 20,
+            //     zoom: 15,
+            //     pitch: 0
+            // }
+        }
+
         fetch('data/'+RID+'/'+RID+'.csv')
             .then(response => response.text())
             .then(csvText => {
@@ -64,7 +89,7 @@
                         type: 'Feature',
                         geometry: {
                             type: 'Point',
-                            coordinates: [row.lon, row.lat] // Ensure correct order: [longitude, latitude]
+                            coordinates: [row.backuplon, row.backuplat] // Ensure correct order: [longitude, latitude]
                         },
                         properties: row, // Include all other CSV columns as properties
                         id: row.id // promote ID
@@ -97,6 +122,7 @@
                         },
                         paint: {
                             'line-width': 5,
+                            'line-offset':4,
                             'line-blur': 0.5,
                             'line-emissive-strength': 10,
                             // Use a get expression (https://docs.mapbox.comhttps://docs.mapbox.com/style-spec/reference/expressions/#get)
@@ -105,39 +131,8 @@
                                 'interpolate',
                                 ['linear'], // Interpolation method (linear, exponential, cubic-bezier)
                                 ['get', 'hrt'], // The data property to interpolate on
-                                70, '#ffffcc', // Input value 70 maps to light red
-                                130, '#800026' // Input value 130 maps to dark red
-                            ],
-                        }
-                    });
-
-                    map.addSource('dog-route', {
-                        type: 'geojson',
-                        // Use a URL for the value for the `data` property.
-                        data: 'data/'+RID+'/'+RID+'_dog_fit.geojson'
-                    });
-
-                    map.addLayer({
-                        id: 'dog-route',
-                        type: 'line',
-                        slot: 'bottom',
-                        source: 'dog-route',
-                        layout: {
-                            'line-cap': 'round',
-                            'line-join': 'round'
-                        },
-                        paint: {
-                            'line-width': 5,
-                            'line-blur': 0.5,
-                            'line-emissive-strength': 10,
-                            // Use a get expression (https://docs.mapbox.comhttps://docs.mapbox.com/style-spec/reference/expressions/#get)
-                            // to set the line-color to a feature property value.
-                            'line-color': [
-                                'interpolate',
-                                ['linear'], // Interpolation method (linear, exponential, cubic-bezier)
-                                ['get', 'hrt'], // The data property to interpolate on
-                                70, '#ffffcc', // Input value 70 maps to light red
-                                130, '#800026' // Input value 130 maps to dark red
+                                80, '#fc9272', // Input value 70 maps to light red
+                                100, '#99000d' // Input value 130 maps to dark red
                             ],
                         }
                     });
@@ -174,6 +169,164 @@
                         }
                     });
 
+                    map.addLayer({
+                        'id': 'add-3d-buildings',
+                        'source': 'composite',
+                        'source-layer': 'building',
+                        'filter': ['==', 'extrude', 'true'],
+                        'type': 'fill-extrusion',
+                        'minzoom': 15,
+                        'paint': {
+                            'fill-extrusion-color': '#aaa',
+
+                            // Use an 'interpolate' expression to
+                            // add a smooth transition effect to
+                            // the buildings as the user zooms in.
+                            'fill-extrusion-height': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                15,
+                                0,
+                                15.05,
+                                ['get', 'height']
+                            ],
+                            'fill-extrusion-base': [
+                                'interpolate',
+                                ['linear'],
+                                ['zoom'],
+                                15,
+                                0,
+                                15.05,
+                                ['get', 'min_height']
+                            ],
+                            'fill-extrusion-opacity': 0.6
+                        }
+                    });
+
+                    map.addSource('dog-route', {
+                        type: 'geojson',
+                        // Use a URL for the value for the `data` property.
+                        data: 'data/'+RID+'/'+RID+'_dog_fit.geojson'
+                    });
+
+                    // load paw prints for dog route
+                    map.loadImage('../../img/pawprints-v2.png', (error, image) => {
+                        if (error) throw error;
+
+                        map.addImage('pattern-dot', image);
+
+                        // const lineBaseWidth = 20;
+
+                        map.addLayer({
+                            id: 'dog-route',
+                            type: 'line',
+                            slot: 'bottom',
+                            source: 'dog-route',
+                            layout: {
+                                'line-join': 'none',
+                            },
+                            paint: {
+                                'line-pattern': 'pattern-dot',
+                                'line-width': ['interpolate',['linear'], ['zoom'], 0, 50, 15, 20],
+                            // 'line-width': [
+                            //     'interpolate',
+                            //     ['linear', 5],
+                            //     ['zoom'],
+                            //     0,
+                            //     lineBaseWidth * 1,
+                            //     0.9999,
+                            //     lineBaseWidth * 2,
+                            //     1,
+                            //     lineBaseWidth * 1,
+                            //     1.9999,
+                            //     lineBaseWidth * 2,
+                            //     2,
+                            //     lineBaseWidth * 1,
+                            //     2.9999,
+                            //     lineBaseWidth * 2,
+                            //     3,
+                            //     lineBaseWidth * 1,
+                            //     3.9999,
+                            //     lineBaseWidth * 2,
+                            //     4,
+                            //     lineBaseWidth * 1,
+                            //     4.9999,
+                            //     lineBaseWidth * 2,
+                            //     5,
+                            //     lineBaseWidth * 1,
+                            //     5.9999,
+                            //     lineBaseWidth * 2,
+                            //     6,
+                            //     lineBaseWidth * 1,
+                            //     6.9999,
+                            //     lineBaseWidth * 2,
+                            //     7,
+                            //     lineBaseWidth * 1,
+                            //     7.9999,
+                            //     lineBaseWidth * 2,
+                            //     8,
+                            //     lineBaseWidth * 1,
+                            //     8.9999,
+                            //     lineBaseWidth * 2,
+                            //     9,
+                            //     lineBaseWidth * 1,
+                            //     9.9999,
+                            //     lineBaseWidth * 2,
+                            //     10,
+                            //     lineBaseWidth * 1,
+                            //     10.9999,
+                            //     lineBaseWidth * 2,
+                            //     11,
+                            //     lineBaseWidth * 1,
+                            //     11.9999,
+                            //     lineBaseWidth * 2,
+                            //     12,
+                            //     lineBaseWidth * 1,
+                            //     12.9999,
+                            //     lineBaseWidth * 2,
+                            //     13,
+                            //     lineBaseWidth * 1,
+                            //     13.9999,
+                            //     lineBaseWidth * 2,
+                            //     14,
+                            //     lineBaseWidth * 1,
+                            //     14.9999,
+                            //     lineBaseWidth * 2,
+                            //     15,
+                            //     lineBaseWidth * 1,
+                            //     15.9999,
+                            //     lineBaseWidth * 2,
+                            //     16,
+                            //     lineBaseWidth * 1,
+                            //     16.9999,
+                            //     lineBaseWidth * 2,
+                            //     17,
+                            //     lineBaseWidth * 1,
+                            //     17.9999,
+                            //     lineBaseWidth * 2,
+                            //     18,
+                            //     lineBaseWidth * 1,
+                            //     18.9999,
+                            //     lineBaseWidth * 2,
+                            //     19,
+                            //     lineBaseWidth * 1,
+                            //     19.9999,
+                            //     lineBaseWidth * 2,
+                            //     20,
+                            //     lineBaseWidth * 1,
+                            //     20.9999,
+                            //     lineBaseWidth * 2,
+                            //     21,
+                            //     lineBaseWidth * 1,
+                            //     22,
+                            //     lineBaseWidth * 2
+                            // ]
+                            }
+                        }); 
+
+                    });
+
                     setActiveChapter('stop0');
                     const targetDiv = document.getElementById('stop0');
 
@@ -183,7 +336,7 @@
 
                     //auto create stop html elements
                     var bigSect = document.getElementById('features')
-                    var outro = document.getElementById("outro")
+                    var outro = document.getElementById("stop16")
 
                     bigSect.removeChild(outro)
 
@@ -213,7 +366,7 @@
                         bigSect.appendChild(newSect)
                     }
 
-                    bigSect.appendChild(outro)
+                    bigSect.append(outro)
 
                     // define mapping for emotion image 
                     const emotMap = {
@@ -229,7 +382,7 @@
                         //console.log(geojsonData.features[feat])
                         var sect = document.getElementById("stop" + String(Number(feat) + 1))
                         // Dynamically fill scroll content elements
-                        sect.children[0].innerHTML = "Stop #" + String(Number(feat) + 1) + " - " + geojsonData.features[feat].properties.walkText
+                        sect.children[0].innerHTML = "Stop #" + String(Number(feat) + 1) + " - " + geojsonData.features[feat].properties.imageDescript
                         sect.children[1].classList.add(emotMap[geojsonData.features[feat].properties.dogRank])
                         sect.children[1].children[0].innerHTML = geojsonData.features[feat].properties.dogText
                         sect.children[2].classList.add(emotMap[geojsonData.features[feat].properties.personRank])
@@ -242,10 +395,10 @@
                     var stopNum = 'stop' + String(Number(feat) + 1)
                     var tempObj = {
                         duration: 2000,
-                        zoom: 18,
+                        zoom: geojsonData.features[feat].properties.zoom,
                         center: geojsonData.features[feat].geometry.coordinates,
-                        pitch: 20,
-                        bearing: 0 //geojsonData.features[feat].properties.bearing in the future.
+                        pitch: geojsonData.features[feat].properties.pitch,
+                        bearing: geojsonData.features[feat].properties.bearing 
                     }
                     chapters[stopNum] = tempObj
                 }
@@ -270,6 +423,7 @@
 
         window.addEventListener("scrollend", (event) => {
             for (const chapterName in chapters) {
+                console.log(chapterName);
                 if (isElementOnScreen(chapterName)) {
                     setActiveChapter(chapterName);
                     map.flyTo(chapters[chapterName]);
@@ -278,20 +432,21 @@
             }
         });
 
-        map.addInteraction('stops-interaction', {
-            type: 'click',
-            target: { layerId: 'csv-points' },
-            handler: (e) => {
+        // commenting out until bug is resolved
+        // map.addInteraction('stops-interaction', {
+        //     type: 'click',
+        //     target: { layerId: 'csv-points' },
+        //     handler: (e) => {
 
-                // Copy coordinates array.
-                const coordinates = e.feature.geometry.coordinates.slice();
-                const stopId = e.feature.properties.id;
-                console.log("stopId", stopId);
+        //         // Copy coordinates array.
+        //         const coordinates = e.feature.geometry.coordinates.slice();
+        //         const stopId = e.feature.properties.id;
+        //         console.log("stopId", stopId);
 
-                document.getElementById('stop' + stopId).scrollIntoView({ behavior: 'smooth' });
+        //         document.getElementById('stop' + stopId).scrollIntoView({ behavior: 'smooth' });
 
-            }
-        });
+        //     }
+        // });
 
 
         let highlightedFeatureId = null;
@@ -301,12 +456,20 @@
             maxWidth: 'auto'
         });
 
+        // Simple JS to handle slide changes 
+        let currentSlide = 0;
+        window.changeSlide = (direction) => {
+            const slides = document.querySelectorAll('.carousel-slide');
+            slides[currentSlide].style.display = 'none';
+            currentSlide = (currentSlide + direction + slides.length) % slides.length;
+            slides[currentSlide].style.display = 'block';
+        };
+
         map.on('zoomstart', () => {
             if (popup.isOpen()) {
                 popup.remove();
             }
         });
-
 
         map.on('zoomend', () => {
 
@@ -315,20 +478,47 @@
             const features = map.queryRenderedFeatures(screenPoint, { layers: ['csv-points'] });
             console.log("features", features);
 
+           
+
             if (highlightedFeatureId) {
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
                 highlightedFeatureId = null;
             }
 
             if (features.length === 1) {
+
+                // define mapping for walking conduciveness 
+                const walkMap = {
+                    1: 'extremely inconducive',
+                    2: 'somewhat inconducive',
+                    3: 'neither conducive nor inconducive',
+                    4: 'somewhat conducive',
+                    5: 'extremely conducive'
+                }
+
                 const featureToHighlight = features[0]; // Or your logic to select
                 highlightedFeatureId = featureToHighlight.properties.id;
                 console.log(highlightedFeatureId, "highlightedFeatureId");
+                console.log(walkMap[featureToHighlight.properties.walkRank]);
+
+                const carouselHtml =
+                '<div class="carousel-container">' +
+                    '<div class="carousel-slide" style="display: block;">' +
+                        '<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">' +
+                    '</div>' +
+                    '<div class="carousel-slide" style="display: none;">' +
+                        '<h2>What makes the <u>' + featureToHighlight.properties.imageDescript + '</u> <i>' + walkMap[featureToHighlight.properties.walkRank] + '</i> for dog walking?</h2>' +
+                        '<p>' + featureToHighlight.properties.walkText + '</p>' +
+                    '</div>' +
+                    '<button class="previous round" style="position: absolute; left: 30%; top: 95%;" onclick="changeSlide(-1)">❮</button>' +
+                    '<button class="next round" style="position: absolute; right: 30%; top: 95%;" onclick="changeSlide(1)">❯</button>' +
+                '</div>';
 
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
 
                 popup.setLngLat(center) // Set the popup's position
-                    .setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+                    .setHTML(carouselHtml)
+                    //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
                     .addTo(map); // Add the popup to the map
             } else if (features.length > 1) {
                 var lowestId = 9999999
@@ -349,7 +539,8 @@
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
 
                 popup.setLngLat(center) // Set the popup's position
-                    .setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+                    .setHTML(carouselHtml)
+                    //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
                     .addTo(map); // Add the popup to the map
             }
         });
