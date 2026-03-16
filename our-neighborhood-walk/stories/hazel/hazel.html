@@ -394,7 +394,7 @@
                 for (feat in geojsonData.features) {
                     var stopNum = 'stop' + String(Number(feat) + 1)
                     var tempObj = {
-                        duration: 2000,
+                        duration: geojsonData.features[feat].properties.duration,
                         zoom: geojsonData.features[feat].properties.zoom,
                         center: geojsonData.features[feat].geometry.coordinates,
                         pitch: geojsonData.features[feat].properties.pitch,
