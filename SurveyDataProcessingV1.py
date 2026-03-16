@@ -3,18 +3,22 @@ File name: SurveyDataProcessingV1.py
 Purpose: This script takes in the photos for survey entries and outputs a file with GPS data
     in columns with survey ids and file names.
 Created by: Alton Hipps
-Last Modified: 01/20/2026
+Last Modified: 03/15/2026
 
-Need yet:
+The script expects that a tSV has been extracted from Qualtrics with new line characters suppressed
+as well as two .fit files.
 
+Use the HumanDogExport_*.yml to create an anaconda environment to run this script.
 '''
 
 #Importing required modules
+from fit2gpx import Converter
 # Install from here: https://gdal.org/en/stable/download.html
-from osgeo import ogr,gdal
+from osgeo import ogr,gdal,osr
 #Install from here: https://pillow.readthedocs.io/en/stable/
 from PIL import Image,ExifTags
 from PIL.ExifTags import TAGS
+from pillow_heif import register_heif_opener
 #Install from here: https://beautiful-soup-4.readthedocs.io/en/latest/#installing-beautiful-soup
 from bs4 import BeautifulSoup
 # Install from here: https://github.com/tkrajina/gpxpy?tab=readme-ov-file
@@ -26,10 +30,14 @@ import os
 import math
 from datetime import datetime,timedelta
 
+# importing specific mappings for user and file mappings
+# will need to change mappings_GH.py to proper local file names to run
+import mappings_GH
+
 # Create class for image info
 class Photo:
     allPhotos=[]
-    def __init__(self,lat,lon,file,recordID,photo,fullPath):
+    def __init__(self,lat,lon,file,recordID,photo,fullPath,bearing):
         self.lat = lat
         self.lon = lon
         self.file=file
@@ -37,6 +45,7 @@ class Photo:
         self.photo=photo
         self.fullPath=fullPath
         self.coords=(lat,lon)
+        self.bearing=bearing
         # Add to list of all photos
         self.snapCoords=None
         Photo.allPhotos.append(self)
@@ -120,6 +129,7 @@ class EntryPhotoCombo:
             pass
         else:
             #print(f'{self.lat}\t{self.photoObj.snapCoords[1]}\n{self.lon}\t{self.photoObj.snapCoords[0]}\n{self.coords}\t{self.photoObj.snapCoords}\n')
+
             self.lat=self.photoObj.snapCoords[1]
             self.lon=self.photoObj.snapCoords[0]
             self.coords=self.photoObj.snapCoords
@@ -147,7 +157,7 @@ class Track:
     def instIDfromCoords(self,coordTup):
         for i in range(len(self.points)):
             if coordTup[0]==self.points[i].coords[0] and coordTup[1]==self.points[i].coords[1]:
-                print(f'\t{coordTup[0]},{coordTup[1]}\n\t{self.points[i].coords[0]},{self.points[i].coords[1]}')
+                #print(f'\t{coordTup[0]},{coordTup[1]}\n\t{self.points[i].coords[0]},{self.points[i].coords[1]}')
                 return self.points[i].instanceID
             i+=1
         print('No matching point found')
@@ -171,15 +181,24 @@ class Track:
                 elif cleaned=='photo':newValue=point.photo
                 elif cleaned=='stopid':newValue=point.instanceID
                 elif cleaned=='stopnumber':newValue=f'Stop #{str(counter)}'
-                elif cleaned=='imagedescript':newValue=point.imageDescript
+                elif cleaned=='imagedescript':newValue=point.imageDescript.strip('"\'')
                 elif cleaned=='personrank':newValue=point.personRank
-                elif cleaned=='persontext':newValue=point.personText
+                elif cleaned=='persontext':newValue=point.personText.strip('"\'')
                 elif cleaned=='dogrank':newValue=point.dogRank
-                elif cleaned=='dogtext':newValue=point.dogText
+                elif cleaned=='dogtext':newValue=point.dogText.strip('"\'')
                 elif cleaned=='walkrank':newValue=point.walkRank
-                elif cleaned=='walktext':newValue=point.walkText
+                elif cleaned=='walktext':newValue=point.walkText.strip('"\'')
                 elif cleaned=='newpath':newValue=point.newPath[1:].replace('\\','/')
                 elif cleaned=='id':newValue=f'{str(counter)}'
+                elif cleaned=='backuplat':newValue=str(point.photoObj.lat)
+                elif cleaned=='backuplon':newValue=str(point.photoObj.lon)
+                elif cleaned=='bearing':newValue=str(point.photoObj.bearing) # must be string
+                elif cleaned=='weather':newValue='N/A'
+                elif cleaned=='duration':newValue='2000' # must be string
+                elif cleaned=='padding':newValue='20'
+                elif cleaned=='zoom':newValue='15'
+                elif cleaned=='pitch':newValue='0'
+                elif cleaned=='center':newValue='[-89.3,43.1]' # must be string
                 if newValue[:-1]!=newValue[0:]:newValue=newValue
                 outStr+='"'+newValue.strip().replace('"',"'")+'"'
                 outStr+=separator
@@ -209,6 +228,8 @@ class Timer:
             comboTime=totDiff.seconds+round(totDiff.microseconds/1000000,4)
             if comboTime<0.01:
                 comboTime='<0.01'
+            else:
+                comboTime=round(comboTime,4)
             lastTime=str(comboTime)+' seconds'
         if printMessage==True: 
             print(f'{lastTime}\t| Checkpoint Added')
@@ -235,16 +256,25 @@ class Timer:
         return True
 
 class FitReading:
+    errorCount=1
     def __init__(self,msgDict):
-        self.lat=msgDict['position_lat']/11930465 
-        self.lon=msgDict['position_long']/11930465
-        self.heartrate=msgDict['heart_rate']
-        self.timestamp=msgDict['timestamp']
-        self.encoded_lat=msgDict['position_lat']
-        self.encoded_lon=msgDict['position_long']
-        self.recordID=''
-        self.pointID=''
 
+        try:
+            self.lat=msgDict['position_lat']/11930465 
+            self.lon=msgDict['position_long']/11930465
+            self.heartrate=msgDict['heart_rate']
+            self.timestamp=msgDict['timestamp']
+            self.encoded_lat=msgDict['position_lat']
+            self.encoded_lon=msgDict['position_long']
+            self.recordID=''
+            self.pointID=''
+            self.error=False
+        except:
+            self.error=True
+            print(f'Bad Point Read #{FitReading.errorCount}')
+            FitReading.errorCount+=1
+            return None
+        
     def __str__(self):
         if len(self.recordID)>0 and len(str(self.pointID))>0: # all fields filled
             outString=f'{self.lat},{self.lon}\t{self.heartrate}\t{self.timestamp}\t{self.recordID}\t{self.pointID}\t{self.type}'
@@ -285,16 +315,25 @@ def slash():
     return slash
 
 def likertTextToNumber(inputText,likertDict):
-    outputNum=likertDict[inputText]
+    try:
+        outputNum=likertDict[inputText]
+    except:
+        print('ERROR:',inputText,likertDict)
+        outputNum=99
     return str(outputNum)
 
 # Define access module
 def accessGPS_IFD(path):
 
     # Access the image
+    #print(path)
+    register_heif_opener()
     im = Image.open(path)
+
     exif = im.getexif()
+    #print(exif)
     gps_ifd = exif.get_ifd(ExifTags.IFD.GPSInfo)
+    #print(gps_ifd)
 
     # Account for north south 
     if gps_ifd[1].upper()=='S':
@@ -320,15 +359,16 @@ def accessGPS_IFD(path):
             continue
         else:
             break
- 
+    
     # Flip file name and separate out photo name from record ID
     fileName=path[len(path)-len(fileNameBuild):]
     findIMG=fileName.find('IMG')
     reportID=fileName[:findIMG-1]
     justPhoto=fileName[findIMG:]
     im=None
+
     # Return lat lon and file name
-    return (lat,lon,fileName,reportID,justPhoto,path)
+    return (lat,lon,fileName,reportID,justPhoto,path,round(float(gps_ifd[17]),8))
 
 # Define function to leaf through file structure from photo export
 def findDirectories(rep):
@@ -362,6 +402,15 @@ def findFiles(directory,lastThree):
     else:
         return outList # returns list of file names
 
+def createGPX(listOfFitfiles):
+    outList=[]
+    for f in listOfFitfiles:
+        conv=Converter()
+        #print(f'{f[:-3]}gpx')
+        conv.fit_to_gpx(f_in=f'{f}', f_out=f'{f[:-3]}gpx')
+        outList.append(f'{f[:-3]}gpx')
+    return outList
+
 # Define function to read GPX files
 def readGPX(listOfGPXfiles,printMode=0):
     filenum=1
@@ -385,7 +434,7 @@ def readGPX(listOfGPXfiles,printMode=0):
                 for point in segment.points:
                     if printMode==1:print(f'Point #{pointnum} at ({point.latitude},{point.longitude}) -> {point.elevation}')
                     line.AddPoint(point.latitude,point.longitude)
-        outDict[file[10:-4]]=line # Testing without .ExportToJson()
+        outDict[file[10:-4]]=line 
         gpx = None
     return outDict
 
@@ -393,9 +442,22 @@ def readGPX(listOfGPXfiles,printMode=0):
 def createJSONs(GPXDict,listOfTracks,decoder,outPath,message=False):
     IDList=Track.recordIdList
     counter=1
+    distDict={} #intializae distance dictionary
+
+    # set up geotransform for projection
+    source = osr.SpatialReference()
+    source.ImportFromEPSG(4326)
+
+    target = osr.SpatialReference()
+    target.ImportFromEPSG(2930) # Wisc South HARN NAD83 ft
+
+    transform = osr.CoordinateTransformation(source, target)
+    reverseTranform= osr.CoordinateTransformation(target,source)
 
     # Loop through all record IDs
     for ID in IDList:
+        if ID=='':
+            continue
         # Decode file name with decoder table
         fileName=decoder[ID]
         # Set first track as a human track
@@ -403,7 +465,7 @@ def createJSONs(GPXDict,listOfTracks,decoder,outPath,message=False):
 
         # loop through each item in the decoder 
         for item in fileName:
-
+            distance=0
             # Set first id number to one on each segment
             idval=1 
 
@@ -508,7 +570,6 @@ def createJSONs(GPXDict,listOfTracks,decoder,outPath,message=False):
 
                         # Loop through each coordinate pair and add to the segment LineString
                         for coordPair in segment:
-                            
                             # Handle first segment's first point
                             if coordPair==None:continue
 
@@ -521,7 +582,20 @@ def createJSONs(GPXDict,listOfTracks,decoder,outPath,message=False):
                         outFeature = ogr.Feature(featureDefn)
                         outFeature.SetField('id',idval)
 
-                        # Set new geometry
+                        #segLine.AssignSpatialReference(source)
+                        
+                        # Transform, measure, transform back
+                        
+                        segLine.Transform(transform)
+                        if distance==0:
+                            print('\nReset Distance')
+                        simpD=math.floor(segLine.GeodesicLength())
+                        distance+=simpD
+                        print(f'{distance}ft\t{simpD}ft')
+                        segLine.Transform(reverseTranform)
+
+
+                        # set geometry
                         outFeature.SetGeometry(segLine)
 
                         # Add new feature to output Layer
@@ -534,14 +608,18 @@ def createJSONs(GPXDict,listOfTracks,decoder,outPath,message=False):
             outFeature = None
             outDataSource = None
 
+            #Add distance to dictionary
+            distDict[f'{ID}_{routeType[:-4]}']=round(distance/5280,2)
+
             # Set up for dog route run
             routeType='dog_GPS'
+    return distDict
 
 # Define function to take geography from photo path and save to file
 def photoGPSinfo_toList(listOfGPSTuples):
     outList=[]
     for GPSTuple in listOfGPSTuples:
-        pic=Photo(GPSTuple[0],GPSTuple[1],GPSTuple[2],GPSTuple[3],GPSTuple[4],GPSTuple[5])
+        pic=Photo(GPSTuple[0],GPSTuple[1],GPSTuple[2],GPSTuple[3],GPSTuple[4],GPSTuple[5],GPSTuple[6])
         outList.append(pic)
     return outList
         
@@ -552,7 +630,8 @@ def readQuestionnaire(path,likertDict):
     # Reading Questionnaire
     with open(path,mode='r',encoding='utf-16') as file:
         rowCount=0
-        
+    
+
         # For each row,
         for row in file:
             if rowCount < 3: # Skip header rows
@@ -561,6 +640,8 @@ def readQuestionnaire(path,likertDict):
 
             # Create list from row
             rowList=row.split('\t')
+
+            #print(rowList)
 
             stopNum=0
             record=''
@@ -590,9 +671,11 @@ def readQuestionnaire(path,likertDict):
                     skipBeginning=False
                     continue
 
+                #print(item[-4:])
+
                 # Id field with photo file name
-                if item[-3:]=="png" or item[-4:]=="jpeg":
-                    if item!='image/jpeg':
+                if item[-3:]=="png" or item[-4:]=="jpeg" or item[-4:]=="heic":
+                    if  item not in ['image/png','image/jpeg','image/heic']:
                         photoString=item[:]
                         #print(photoString)
                         nextSeven=0
@@ -609,6 +692,7 @@ def readQuestionnaire(path,likertDict):
                     continue
                 # Create Entry OBj and add to list
                 if len(detailList)>6:
+                    #print(detailList)
                     entryObj=Entry(record, #Record ID
                       inc_id, # Instance ID
                       photoString, # Photo Path
@@ -622,11 +706,13 @@ def readQuestionnaire(path,likertDict):
                       )
                     #print('Created Entry\t'+str(entryObj))
                     listOfEntries.append(entryObj)
-                    detailList=[]  
+                    #print(entryObj)
+                detailList=[]  
     return listOfEntries
 
 # Define function to create class of combined photo and survey data
 def createComboObjs(listPhotoObjs,listEntryObjs):
+
     outList=[]
     shortList=[]
     for obj in listPhotoObjs:
@@ -728,13 +814,16 @@ def moveImagesFromTracks(listOfTracks,printMessages=0):
                         rotator=180
                     elif v == 6:
                         rotator=270
+                    elif v==1:
+                        rotator=0
                     else:
                         rotator=0
+                        print(f'Rotater unknown\tCode {v}')
             if printMessages==1:trackingDict['okay']+=1
             if Xsize>1000 or Ysize>1000: # resize if over 1000 pixels in any direction
                 ratio=Xsize/Ysize
                 if printMessages==1:print(f'\tPhoto too big ({Xsize},{Ysize}) with ratio {round(ratio,4)}')
-                if rotator==180: # landscape
+                if rotator==180 or rotator==0: # landscape
                     image=image.rotate(rotator)
                     newSize=(1000,int(round(1000/ratio,0)))
                     if printMessages==1:print(f'\tNew size: {newSize}\tratio {round(newSize[0]/newSize[1],4)}')
@@ -751,6 +840,14 @@ def moveImagesFromTracks(listOfTracks,printMessages=0):
             image_without_exif = Image.new(smallPhoto.mode, smallPhoto.size)
             image_without_exif.putdata(data)
             newPath=f'.{slash()}img{slash()}{recordID}{slash()}{photo}'
+            
+            # Save as jpg
+            #print(newPath)
+            if newPath[-4:]!='jpeg':
+                newPath='.'+newPath.split('.')[1]+'.jpeg'
+                #print(f'Changed: {newPath}')
+
+
             image_without_exif.save(newPath)
             # Assign new photo to object
             entry.newPath=newPath
@@ -799,19 +896,26 @@ def getMessages(dictOfDicts,stemLen=0,printMessage=0):
         messageDict=dictOfDicts[key]
         recordMsgs=[]
         counter=1
+        once=True
         for sec_key in list(messageDict.keys()):
             if sec_key == 'record_mesgs':
                 for individualDict in messageDict[sec_key]:
-                    if len(list(individualDict.keys()))<14:
+                    if once==True:
+                        #print(f'{individualDict.keys()}')
+                        once=False
+                    if 'heart_rate' not in list(individualDict.keys()):
+                    #if len(list(individualDict.keys()))<14:
                         #print(f'\tLess than 14 {len(list(individualDict.keys()))}')
                         #if 'heart_rate' not in list(individualDict.keys()):
                         #    individualDict['heart_rate']='No data'
+
                         #no_heartrate.append(FitReading(individualDict))
+                        individualDict['heart_rate']='No data'
                         continue
                     else:
                         fitObj=FitReading(individualDict)
                         fitObj.setID(counter)
-                    recordMsgs.append(fitObj)
+                        recordMsgs.append(fitObj)
                     counter+=1
         quickCopy=recordMsgs[:]
         shortKey=key[stemLen:]
@@ -830,17 +934,14 @@ def segmentize(fitDict,IDMap,HumanOrDog):
     for ID in IDMap:
         for fileName in IDMap[ID]:
             inverseMap[fileName]=ID
-    #print(inverseMap)
+
     for ID in HumanOrDog:
         for fileName in HumanOrDog[ID]:
             inverseHumanDog[fileName]=ID
 
-    #print(inverseHumanDog)
-
     maxDict={}
     maxOutList=[]
     for item in range(len(keyList)):
-        #print(keyList[item])
         counter=0
         minhr=500
         maxhr=0
@@ -850,7 +951,14 @@ def segmentize(fitDict,IDMap,HumanOrDog):
         recID=inverseMap[matchName]
         participantType=inverseHumanDog[matchName]
         smallList=[]
+
+        for obj in fitObjs[:]:
+            if obj.error == True:
+                fitObjs.remove(obj)
+
         for obj in fitObjs:
+            if obj.error == True: print(obj.error)
+
             obj.addRecordID(recID)
             obj.setType(participantType)
             counter+=1
@@ -863,11 +971,14 @@ def segmentize(fitDict,IDMap,HumanOrDog):
                 maxHrObjID=obj.pointID
             smallList.append(obj)
 
-        maxDict[f'{obj.recordID}_{obj.type}']=maxHrObjID
+            maxDict[f'{obj.recordID}_{obj.type}']=maxHrObjID
+
+
 
         minclass=math.floor(minhr/10)*10
         maxclass=math.ceil(maxhr/10)*10
         numOfClasses=(maxclass-minclass)/10
+
         classFloors=[]
         classifySummaryDict={}
         for i in range(int(numOfClasses)):
@@ -898,7 +1009,6 @@ def segmentize(fitDict,IDMap,HumanOrDog):
                 obj.maxHRT=True
                 maxOut=(obj.pointID,obj.lon,obj.lat,obj.heartrate,obj.timestamp)
                 maxOutList.append(maxOut)
-                #print(obj.pointID,obj.heartrate)
             else:
                 obj.maxHRT=False
             
@@ -913,10 +1023,9 @@ def segmentize(fitDict,IDMap,HumanOrDog):
                 segList=[]
             else:
                 segList.append(obj)
-        #stats=(minhr,maxhr,counter,minclass,maxclass,classifySummaryDict,len(totalSegList))
-        #print(stats)
+
         outDict[totalSegList[0][0].recordID+'_'+totalSegList[0][0].type]=totalSegList[:]
-    #print(outDict)
+
     return outDict,maxOutList
 
 # Function to create a JSON file for heartrate data
@@ -1010,23 +1119,21 @@ def createFitJSONs(fitDict,filePrefix):
 
 # Constants
 rawData=f'.{slash()}rawData'
-outAssetsFilePath=f"..{slash()}assets"
-outPagesPath=f"..{slash()}pages"
-outFields=['recordID','stopID','stopNumber','lat','lon','newPath','imageDescript','personRank','personText',
-           'dogRank','dogText','walkRank','walkText','id']
-ID_to_GPX={ # This piece is still manual and could be tough with more files. Probably need some kind of naming convention
-    'R_1L0xQ5tCBthP53o':('sample_April_crop','sample_pup_Cabot_wApril_crop'),
-    'R_1hPUV8wxBmis1gR':('sample_Jonathan_crop','sample_pup_Nittany_wJonathan_crop')
-}
-ID_to_fit=ID_to_GPX
-ID_to_Type={
-    'Dog':('sample_pup_Cabot_wApril_crop','sample_pup_Nittany_wJonathan_crop'),
-    'Human':('sample_April_crop','sample_Jonathan_crop')
-}
-likertMap={
+outAssetsFilePath=f".{slash()}assets"
+outPagesPath=f".{slash()}pages"
+outFields=['recordID','stopID','stopNumber','lat','lon','backuplat','backuplon','id',
+           'bearing','duration','center','padding','zoom','pitch',
+           'personRank','dogRank','walkRank','weather','newPath',
+           'imageDescript','personText','dogText','walkText']
+
+# pulling file and ID mappings from other file
+ID_to_GPX=mappings_GH.ID_to_GPX
+ID_to_Type=mappings_GH.dogOrHuman
+
+likertMap={ # Map likert responses to numbers across multiple scales
     'Extremely positive':5,
     'Somewhat positive':4,
-    'Neither positive nor negative':3,
+    'Neither positive nor negative':3, 
     'Somewhat negative':2,
     'Extremely negative':1,
     'Not Applicable':0,
@@ -1052,14 +1159,16 @@ combos=createComboObjs(photoObjs,entries)
 print(str(len(entries))+' Entries detected')
 ts.mark('Created Combo Objects')
 trackList=createTracks(combos)
-createJSONs(readGPX(findFiles(rawData,'gpx')),trackList,ID_to_GPX,outAssetsFilePath)
-ts.mark('Built GPS JSON files')
 fitFiles=findFiles(rawData,'fit')
 ts.mark('Found Fit Files')
+gpxFiles=createGPX(fitFiles)
+ts.mark('Created GPX files')
+distances=createJSONs(readGPX(gpxFiles),trackList,ID_to_GPX,outAssetsFilePath)
+print(distances)
+ts.mark('Built GPS JSON files')
 messages=getMessages(readFit(fitFiles),len(rawData)+1)
 ts.mark('Retrieved Messages')
-segements,maxHRTInfo=segmentize(messages,ID_to_fit,ID_to_Type)
-print(maxHRTInfo)
+segements,maxHRTInfo=segmentize(messages,ID_to_GPX,ID_to_Type)
 ts.mark('Heartrate Segmented')
 createFitJSONs(segements,outAssetsFilePath)
 ts.mark('Fit JSONs completed')
@@ -1067,10 +1176,6 @@ trackList=createTracks(combos) # reiterate to snap photos to gps tracks
 createDirectFromTracks(trackList)
 moveImagesFromTracks(trackList)
 ts.mark('Prepared Photos')
-# Add entry for max heartRate
-
-#copyHTMLpage(r'./toCopy.html',outPagesPath,trackList)
-#ts.addCheckpoint('Built HTML Pages')
 tracks_toCSV(trackList,outFields,outAssetsFilePath)
 ts.mark('Built CSV files')
 ts.printCheckpoints()
