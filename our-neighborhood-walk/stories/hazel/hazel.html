@@ -30,6 +30,7 @@
             <p>
                 lorem epsum
             </p>
+            <p style="height: 800px;"> </p>
             <img src="../../img/hazel-banner.jpeg" class="photo"><br>
         </section>
     </div>
@@ -55,6 +56,7 @@
         map.doubleClickZoom.disable();
         map.touchZoomRotate.disable();
         map.keyboard.disable();
+        map.touchPitch.disable();
 
         var chapters = {
             // manually inject intro chapter
@@ -393,15 +395,21 @@
                 // dynamically create chapters
                 for (feat in geojsonData.features) {
                     var stopNum = 'stop' + String(Number(feat) + 1)
+
                     var tempObj = {
                         duration: geojsonData.features[feat].properties.duration,
                         zoom: geojsonData.features[feat].properties.zoom,
                         center: geojsonData.features[feat].geometry.coordinates,
                         pitch: geojsonData.features[feat].properties.pitch,
-                        bearing: geojsonData.features[feat].properties.bearing 
+                        bearing: geojsonData.features[feat].properties.bearing,
                     }
+                    if (chapters['stop' + String(Number(feat))].zoom==tempObj.zoom){ //always adjust zoom so that the onzoom is triggered between chapters.
+                    tempObj.zoom=tempObj.zoom+.25
+                    }
+
                     chapters[stopNum] = tempObj
                 }
+                //console.log(chapters)
             })
             .catch(error => console.error('Error fetching CSV:', error));
 
@@ -427,6 +435,7 @@
                 if (isElementOnScreen(chapterName)) {
                     setActiveChapter(chapterName);
                     map.flyTo(chapters[chapterName]);
+                    console.log(chapters[chapterName])
                     break;
                 }
             }
@@ -471,14 +480,46 @@
             }
         });
 
-        map.on('zoomend', () => {
+        function arrayOfOne(){
+            console.log(activeChapterName)
+            if (activeChapterName=='stop0'){
+                return NaN
 
-            const center = map.getCenter();
+            }
+            var features=[]
+            var expandedBy=1
+            while (features.length<1){
+                const center = map.getCenter();
+                const screenPoint = map.project(center);
+                const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
+                features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] })
+                expandedBy+=1
+                if (features.length>0){
+                    for (feat in features){
+                        if (activeChapterName == 'stop'+features[feat].properties.id){
+                            console.log('matching numbers','stop'+features[feat].properties.id)
+                        }
+                    }
+                }
+                if (expandedBy>100){
+                    break
+                }
+            }
+            console.log('Iterations',expandedBy)
+            return features
+        }
+        map.on('moveend', () => { //zoomend or moveend
+            console.log('check triggered')
+
+/*             const center = map.getCenter();
             const screenPoint = map.project(center);
-            const features = map.queryRenderedFeatures(screenPoint, { layers: ['csv-points'] });
-            console.log("features", features);
+            var expandedBy=1
+            const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
+            var features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] }); */
 
-           
+            features=arrayOfOne()
+            //console.log('bbox',bbox)
+            console.log("features", features)
 
             if (highlightedFeatureId) {
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
@@ -497,6 +538,7 @@
                 }
 
                 const featureToHighlight = features[0]; // Or your logic to select
+
                 highlightedFeatureId = featureToHighlight.properties.id;
                 console.log(highlightedFeatureId, "highlightedFeatureId");
                 console.log(walkMap[featureToHighlight.properties.walkRank]);
@@ -516,7 +558,7 @@
 
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
 
-                popup.setLngLat(center) // Set the popup's position
+                popup.setLngLat(map.getCenter()) // Set the popup's position
                     .setHTML(carouselHtml)
                     //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
                     .addTo(map); // Add the popup to the map
