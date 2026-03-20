@@ -58,6 +58,78 @@
         map.keyboard.disable();
         map.touchPitch.disable();
 
+        const size = 100;
+
+        // This implements `StyleImageInterface`
+        // to draw a pulsing dot icon on the map.
+        const pulsingDot = {
+            width: size,
+            height: size,
+            data: new Uint8Array(size * size * 4),
+
+            // When the layer is added to the map,
+            // get the rendering context for the map canvas.
+            onAdd: function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = this.width;
+                canvas.height = this.height;
+                this.context = canvas.getContext('2d');
+            },
+
+            // Call once before every frame where the icon will be used.
+            render: function () {
+                const duration = 2000;
+                const t = (performance.now() % duration) / duration;
+
+                const radius = (size / 2) * 0.3;
+                const outerRadius = (size / 2) * 0.7 * t + radius;
+                const context = this.context;
+
+                // Draw the outer circle.
+                context.clearRect(0, 0, this.width, this.height);
+                context.beginPath();
+                context.arc(
+                    this.width / 2,
+                    this.height / 2,
+                    outerRadius,
+                    0,
+                    Math.PI * 2
+                );
+                context.fillStyle = `rgba(0, 128, 0, ${1 - t})`;
+                context.fill();
+
+                // Draw the inner circle.
+                context.beginPath();
+                context.arc(
+                    this.width / 2,
+                    this.height / 2,
+                    radius,
+                    0,
+                    Math.PI * 2
+                );
+                context.fillStyle = 'rgba(0, 128, 0, 1)';
+                context.strokeStyle = 'rgba(0, 128, 0, 1)';
+                context.lineWidth = 2 + 4 * (1 - t);
+                context.fill();
+                context.stroke();
+
+                // Update this image's data with data from the canvas.
+                this.data = context.getImageData(
+                    0,
+                    0,
+                    this.width,
+                    this.height
+                ).data;
+
+                // Continuously repaint the map, resulting
+                // in the smooth animation of the dot.
+                map.triggerRepaint();
+
+                // Return `true` to let the map know that the image was updated.
+                return true;
+            }
+        };
+
         var chapters = {
             // manually inject intro chapter
             'stop0': {
@@ -139,36 +211,23 @@
                         }
                     });
 
+                    map.addImage('pulsing-dot', pulsingDot, {
+                        pixelRatio: 2,
+                        //sdf: 'true'
+                    });
+
                     map.addSource('csv-data', {
                         type: 'geojson',
                         data: geojsonData
                     });
 
                     map.addLayer({
-                        id: 'csv-points',
-                        type: 'circle',
-                        slot: 'top',
-                        source: 'csv-data',
-                        paint: {
-                            'circle-radius': [
-                                'case',
-                                ['boolean', ['feature-state', 'highlight'], false],
-                                10, // Highlight color
-                                6  // Default color
-                            ],
-                            'circle-opacity': [
-                                'case',
-                                ['boolean', ['feature-state', 'highlight'], false],
-                                1.0, // Highlight color
-                                0.5  // Default color
-                            ],
-                            'circle-color': [
-                                'case',
-                                ['boolean', ['feature-state', 'highlight'], false],
-                                'orange', // Highlight color
-                                'black'  // Default color
-                            ]
-                        }
+                        'id': 'csv-points',
+                        'type': 'symbol',
+                        'source': 'csv-data',
+                        'layout': {
+                            'icon-image': 'pulsing-dot',
+                        },
                     });
 
                     map.addLayer({
@@ -417,6 +476,11 @@
         function setActiveChapter(chapterName) {
             if (chapterName === activeChapterName) return;
 
+            map.flyTo(chapters[chapterName]);
+            // map.dragPan.disable();
+            // map.keyboard.disable();
+            console.log(chapters[chapterName])
+
             document.getElementById(chapterName).classList.add('active');
             document.getElementById(activeChapterName).classList.remove('active');
 
@@ -429,34 +493,47 @@
             return bounds.top < window.innerHeight && bounds.bottom > 0;
         }
 
-        window.addEventListener("scrollend", (event) => {
+        // we need to distinguish between a user initiated and programattic zoom event
+        let isProgrammaticScroll = false;
+        window.addEventListener('scrollend', () => {
+            if (isProgrammaticScroll) {
+                // Reset the flag and exit early
+                isProgrammaticScroll = false;
+                return;
+            }
             for (const chapterName in chapters) {
                 console.log(chapterName);
                 if (isElementOnScreen(chapterName)) {
                     setActiveChapter(chapterName);
-                    map.flyTo(chapters[chapterName]);
-                    console.log(chapters[chapterName])
                     break;
                 }
             }
+            const atBottom = window.scrollHeight - window.clientHeight <= window.scrollTop + 1; // Adding 1px tolerance
+
+            if (atBottom) {
+                // Wrap back to the top
+                window.animate({ scrollTop: 0 }, "fast");
+            }
+            console.log('User scrolled manually');
         });
 
-        // commenting out until bug is resolved
-        // map.addInteraction('stops-interaction', {
-        //     type: 'click',
-        //     target: { layerId: 'csv-points' },
-        //     handler: (e) => {
+        map.addInteraction('stops-interaction', {
+            type: 'click',
+            target: { layerId: 'csv-points' },
+            handler: (e) => {
 
-        //         // Copy coordinates array.
-        //         const coordinates = e.feature.geometry.coordinates.slice();
-        //         const stopId = e.feature.properties.id;
-        //         console.log("stopId", stopId);
+                const stopId = e.feature.properties.id;
+                let chapterName = 'stop' + stopId;
+                isProgrammaticScroll = true;
+                const targetDiv = document.getElementById(chapterName);
+                targetDiv.scrollIntoView({
+                    behavior: 'smooth', // Smoothly animates the scroll
+                    block: 'start'      // Aligns the top of the element to the top of the viewport
+                });
 
-        //         document.getElementById('stop' + stopId).scrollIntoView({ behavior: 'smooth' });
-
-        //     }
-        // });
-
+                setActiveChapter(chapterName);
+            }
+        });
 
         let highlightedFeatureId = null;
         // Create a new popup
@@ -552,8 +629,8 @@
                         '<h2>What makes the <u>' + featureToHighlight.properties.imageDescript + '</u> <i>' + walkMap[featureToHighlight.properties.walkRank] + '</i> for dog walking?</h2>' +
                         '<p>' + featureToHighlight.properties.walkText + '</p>' +
                     '</div>' +
-                    '<button class="previous round" style="position: absolute; left: 30%; top: 95%;" onclick="changeSlide(-1)">❮</button>' +
-                    '<button class="next round" style="position: absolute; right: 30%; top: 95%;" onclick="changeSlide(1)">❯</button>' +
+                    '<button class="previous round" style="position: absolute; left: 30%" onclick="changeSlide(-1)">❮</button>' +
+                    '<button class="next round" style="position: absolute; right: 30%" onclick="changeSlide(1)">❯</button>' +
                 '</div>';
 
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });

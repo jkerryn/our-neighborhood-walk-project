@@ -190,8 +190,8 @@ section:last-child {
     margin-bottom: 200px;
 }
 .photo {
-    height: 40vh; /* Sets the image height to 40% of the viewport height */
-    width: auto; /* Allows the width to adjust automatically to maintain aspect ratio */
+    /* height: 40vh; Sets the image height to 40% of the viewport height */
+    width: 500px; /* Allows the width to adjust automatically to maintain aspect ratio */
 }
 .face {
     display: block;
@@ -207,16 +207,22 @@ section:last-child {
     text-align: center;
     max-width: 500px; /* Looks about right. Could be set dynamically */
 }
-.previous {
-    background-color: #f1f1f1;
-    color: black;
+.previous, .next {
+    position: absolute;
+    padding: 15px;
+    background-color: green;
+    outline: none;
+    border: none; 
+    color: white;      
+    padding: 6px 8px;        
+    text-decoration: none;     
+    border-radius: 15%;        
+    transition-duration: 0.4s; 
+    cursor: pointer;
+    display: inline-block;           
 }
-  
-.next {
-    background-color: #04AA6D;
-    color: white;
-}
-  
-.round {
-    border-radius: 50%;
+.previous:hover, .next:hover {
+    background-color: #e9ecef; 
+    color: green;            
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); 
 }
