@@ -25,14 +25,14 @@
             <img src="../../img/hazel-banner.jpeg" class="photo"><br>
             <h2>Scroll to begin!</h2>
         </section>
-        <section id="stop16">
+        <!-- <section id="stop16">
             <h1>That concludes your Neighborhood walk with Hazel</h1>
             <p>
                 lorem epsum
             </p>
             <p style="height: 800px;"> </p>
             <img src="../../img/hazel-banner.jpeg" class="photo"><br>
-        </section>
+        </section> -->
     </div>
     <script>
         
@@ -150,7 +150,7 @@
             // }
         }
 
-        fetch('data/'+RID+'/'+RID+'.csv')
+        fetch('data/'+RID+'/'+RID+'-edited.csv')
             .then(response => response.text())
             .then(csvText => {
                 const parsedData = Papa.parse(csvText, {
@@ -182,7 +182,8 @@
                     map.addSource('human-route', {
                         type: 'geojson',
                         // Use a URL for the value for the `data` property.
-                        data: 'data/'+RID+'/'+RID+'_human_fit.geojson'
+                        data: 'data/'+RID+'/'+RID+'_human_fit.geojson',
+                        generateId: true
                     });
 
                     map.addLayer({
@@ -208,6 +209,38 @@
                                 80, '#fc9272', // Input value 70 maps to light red
                                 100, '#99000d' // Input value 130 maps to dark red
                             ],
+                        }
+                    });
+
+                    const heartRatePopup = new mapboxgl.Popup({
+                        closeButton: false,
+                        closeOnClick: false,
+                        // className: 'heart-popup',
+                    });
+
+                    map.addInteraction('human-route-mouseenter-interaction', {
+                        type: 'mouseenter',
+                        target: { layerId: 'human-route' },
+                        handler: (e) => {
+                            map.getCanvas().style.cursor = 'pointer';
+
+                            console.log("e",e);
+
+                            // Copy the coordinates from the segment underneath the cursor
+                            //const coordinates = e.feature.geometry.coordinates.slice();
+                            const hrt = e.feature.properties.hrt;
+
+                            // Populate the popup and set its coordinates based on the feature found.
+                            heartRatePopup.setLngLat(e.lngLat).setHTML('<h1>🧍‍♂️❤️ ~' + hrt + ' BPM</h1>').addTo(map);
+                        }
+                    });
+
+                    map.addInteraction('human-route-mouseleave-interaction', {
+                        type: 'mouseleave',
+                        target: { layerId: 'human-route' },
+                        handler: () => {
+                            map.getCanvas().style.cursor = '';
+                            heartRatePopup.remove();
                         }
                     });
 
@@ -397,24 +430,24 @@
 
                     //auto create stop html elements
                     var bigSect = document.getElementById('features')
-                    var outro = document.getElementById("stop16")
+                    //var outro = document.getElementById('stop16')
 
-                    bigSect.removeChild(outro)
+                    //bigSect.removeChild(outro)
 
                     for (feat in geojsonData.features) {
                         var idName = 'stop' + String(Number(feat) + 1)
-                        var newSect = document.createElement("section")
+                        var newSect = document.createElement('section')
                         newSect.id = idName
-                        var h2Tag = document.createElement("h2")
+                        var h2Tag = document.createElement('h2')
 
-                        var dogTag = document.createElement("div")
+                        var dogTag = document.createElement('div')
                         dogTag.classList.add('quote')
                         dogTag.classList.add('dog')
 
                         var blockquoteTag = document.createElement('blockquote')
                         dogTag.appendChild(blockquoteTag)
 
-                        var personTag = document.createElement("div")
+                        var personTag = document.createElement('div')
                         personTag.classList.add('quote')
                         personTag.classList.add('person')
 
@@ -427,7 +460,7 @@
                         bigSect.appendChild(newSect)
                     }
 
-                    bigSect.append(outro)
+                    //bigSect.append(outro)
 
                     // define mapping for emotion image 
                     const emotMap = {

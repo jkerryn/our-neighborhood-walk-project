@@ -7,6 +7,7 @@ body {
     top: 0;
     bottom: 0;
     width: 60%;
+    border-right: 0.5em solid green;
 }
 .quote {
     display:flex;
@@ -187,7 +188,7 @@ section.active {
 }
 section:last-child {
     border-bottom: none;
-    margin-bottom: 200px;
+    margin-bottom: 500px;
 }
 .photo {
     /* height: 40vh; Sets the image height to 40% of the viewport height */
@@ -225,4 +226,34 @@ section:last-child {
     background-color: #e9ecef; 
     color: green;            
     box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); 
+}
+/* 2. CSS for the Heart Shape */
+.heart-popup .mapboxgl-popup-content {
+    background: transparent; /* Make default box invisible */
+    box-shadow: none;
+    padding: 0;
+}
+
+.heart-popup .mapboxgl-popup-tip {
+    display: none; /* Hide the default triangle tip */
+}
+
+/* Create heart using pseudo-elements */
+.heart-popup .mapboxgl-popup-content::before,
+.heart-popup .mapboxgl-popup-content::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 25px;
+    height: 40px;
+    background: #ff5a5f; /* Heart Color */
+    border-radius: 25px 25px 0 0;
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
+}
+
+.heart-popup .mapboxgl-popup-content::after {
+    left: 25px;
+    transform: rotate(45deg);
+    transform-origin: 100% 100%;
 }
