@@ -2,6 +2,9 @@ body {
     margin: 0;
     padding: 0;
 }
+p {
+    font-size: 15px;
+}
 #map { 
     position: fixed;
     top: 0;
@@ -256,4 +259,7 @@ section:last-child {
     left: 25px;
     transform: rotate(45deg);
     transform-origin: 100% 100%;
+}
+img {
+    filter: drop-shadow(5px 5px 10px #9b9b9b);
 }
