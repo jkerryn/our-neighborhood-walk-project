@@ -17,21 +17,22 @@
         <section id="stop0" class="active">
             <h1>A Neighborhood Walk with Hazel</h1>
             <p>
-                On February 25th, 2026 you and your pup went for a X mile walk departing the Eastmorland area, which has been
-                described by the Community Association as "a cohesive neighborhood of approximately 3,200 residents on the east side of Madison, Wisconsin near Lake Monona and Olbrich Park." The temperature was X°F with a real feel of X°F due to the X
-                mi/hr wind blowing from the X. You logged over X steps over the X minute walk, ascending Xft and
+                On February 25th, 2026 you and your pup went for a ~3.4 mile walk, covering relatively flat terrain and departing the Eastmorland area, which has been
+                described by the Community Association as "a cohesive neighborhood of approximately 3,200 residents on the east side of Madison, Wisconsin near Lake Monona and Olbrich Park." According to the <a href="https://www.wihealthatlas.org/walkability" target="_blank" rel="noopener noreferrer">Wisconsin Health Atlas</a>, the walkability of this area of Madison is considered "above average." The temperature was 29°F with passing clouds and a real feel of ~25°F due to the 6
+                mi/hr wind blowing from the west-northwest. Your outing lasted ~1 hour,
                 logging 15 stops detailed below.
             </p>
             <img src="../../img/hazel-banner.jpeg" class="photo"><br>
             <h2>Scroll to begin!</h2>
         </section>
-        <section id="stop16">
+        <!-- <section id="stop16">
             <h1>That concludes your Neighborhood walk with Hazel</h1>
             <p>
                 lorem epsum
             </p>
+            <p style="height: 800px;"> </p>
             <img src="../../img/hazel-banner.jpeg" class="photo"><br>
-        </section>
+        </section> -->
     </div>
     <script>
         
@@ -50,11 +51,84 @@
             padding: 20, // Optional: adds padding to the bounds so they don't touch the edge of the map
         });
         // disable all user scroll options
-        // map.scrollZoom.disable();
-        // map.boxZoom.disable();
-        // map.doubleClickZoom.disable();
-        // map.touchZoomRotate.disable();
-        // map.keyboard.disable();
+        map.scrollZoom.disable();
+        map.boxZoom.disable();
+        map.doubleClickZoom.disable();
+        map.touchZoomRotate.disable();
+        map.keyboard.disable();
+        map.touchPitch.disable();
+
+        const size = 100;
+
+        // This implements `StyleImageInterface`
+        // to draw a pulsing dot icon on the map.
+        const pulsingDot = {
+            width: size,
+            height: size,
+            data: new Uint8Array(size * size * 4),
+
+            // When the layer is added to the map,
+            // get the rendering context for the map canvas.
+            onAdd: function () {
+                const canvas = document.createElement('canvas');
+                canvas.width = this.width;
+                canvas.height = this.height;
+                this.context = canvas.getContext('2d');
+            },
+
+            // Call once before every frame where the icon will be used.
+            render: function () {
+                const duration = 2000;
+                const t = (performance.now() % duration) / duration;
+
+                const radius = (size / 2) * 0.3;
+                const outerRadius = (size / 2) * 0.7 * t + radius;
+                const context = this.context;
+
+                // Draw the outer circle.
+                context.clearRect(0, 0, this.width, this.height);
+                context.beginPath();
+                context.arc(
+                    this.width / 2,
+                    this.height / 2,
+                    outerRadius,
+                    0,
+                    Math.PI * 2
+                );
+                context.fillStyle = `rgba(0, 128, 0, ${1 - t})`;
+                context.fill();
+
+                // Draw the inner circle.
+                context.beginPath();
+                context.arc(
+                    this.width / 2,
+                    this.height / 2,
+                    radius,
+                    0,
+                    Math.PI * 2
+                );
+                context.fillStyle = 'rgba(0, 128, 0, 1)';
+                context.strokeStyle = 'rgba(0, 128, 0, 1)';
+                context.lineWidth = 2 + 4 * (1 - t);
+                context.fill();
+                context.stroke();
+
+                // Update this image's data with data from the canvas.
+                this.data = context.getImageData(
+                    0,
+                    0,
+                    this.width,
+                    this.height
+                ).data;
+
+                // Continuously repaint the map, resulting
+                // in the smooth animation of the dot.
+                map.triggerRepaint();
+
+                // Return `true` to let the map know that the image was updated.
+                return true;
+            }
+        };
 
         var chapters = {
             // manually inject intro chapter
@@ -76,7 +150,7 @@
             // }
         }
 
-        fetch('data/'+RID+'/'+RID+'.csv')
+        fetch('data/'+RID+'/'+RID+'-edited.csv')
             .then(response => response.text())
             .then(csvText => {
                 const parsedData = Papa.parse(csvText, {
@@ -108,7 +182,8 @@
                     map.addSource('human-route', {
                         type: 'geojson',
                         // Use a URL for the value for the `data` property.
-                        data: 'data/'+RID+'/'+RID+'_human_fit.geojson'
+                        data: 'data/'+RID+'/'+RID+'_human_fit.geojson',
+                        generateId: true
                     });
 
                     map.addLayer({
@@ -131,10 +206,47 @@
                                 'interpolate',
                                 ['linear'], // Interpolation method (linear, exponential, cubic-bezier)
                                 ['get', 'hrt'], // The data property to interpolate on
-                                80, '#fc9272', // Input value 70 maps to light red
-                                100, '#99000d' // Input value 130 maps to dark red
+                                70, '#fc9272', // Input value 80 maps to light red
+                                100, '#99000d' // Input value 100 maps to dark red
                             ],
                         }
+                    });
+
+                    const heartRatePopup = new mapboxgl.Popup({
+                        closeButton: false,
+                        closeOnClick: false,
+                        // className: 'heart-popup',
+                    });
+
+                    map.addInteraction('human-route-mouseenter-interaction', {
+                        type: 'mouseenter',
+                        target: { layerId: 'human-route' },
+                        handler: (e) => {
+                            map.getCanvas().style.cursor = 'pointer';
+
+                            console.log("e",e);
+
+                            // Copy the coordinates from the segment underneath the cursor
+                            //const coordinates = e.feature.geometry.coordinates.slice();
+                            const hrt = e.feature.properties.hrt;
+
+                            // Populate the popup and set its coordinates based on the feature found.
+                            heartRatePopup.setLngLat(e.lngLat).setHTML('<h1>🧍‍♂️❤️ ~' + hrt + ' BPM</h1>').addTo(map);
+                        }
+                    });
+
+                    map.addInteraction('human-route-mouseleave-interaction', {
+                        type: 'mouseleave',
+                        target: { layerId: 'human-route' },
+                        handler: () => {
+                            map.getCanvas().style.cursor = '';
+                            heartRatePopup.remove();
+                        }
+                    });
+
+                    map.addImage('pulsing-dot', pulsingDot, {
+                        pixelRatio: 2,
+                        //sdf: 'true'
                     });
 
                     map.addSource('csv-data', {
@@ -143,30 +255,12 @@
                     });
 
                     map.addLayer({
-                        id: 'csv-points',
-                        type: 'circle',
-                        slot: 'top',
-                        source: 'csv-data',
-                        paint: {
-                            'circle-radius': [
-                                'case',
-                                ['boolean', ['feature-state', 'highlight'], false],
-                                10, // Highlight color
-                                6  // Default color
-                            ],
-                            'circle-opacity': [
-                                'case',
-                                ['boolean', ['feature-state', 'highlight'], false],
-                                1.0, // Highlight color
-                                0.5  // Default color
-                            ],
-                            'circle-color': [
-                                'case',
-                                ['boolean', ['feature-state', 'highlight'], false],
-                                'orange', // Highlight color
-                                'black'  // Default color
-                            ]
-                        }
+                        'id': 'csv-points',
+                        'type': 'symbol',
+                        'source': 'csv-data',
+                        'layout': {
+                            'icon-image': 'pulsing-dot',
+                        },
                     });
 
                     map.addLayer({
@@ -336,24 +430,24 @@
 
                     //auto create stop html elements
                     var bigSect = document.getElementById('features')
-                    var outro = document.getElementById("stop16")
+                    //var outro = document.getElementById('stop16')
 
-                    bigSect.removeChild(outro)
+                    //bigSect.removeChild(outro)
 
                     for (feat in geojsonData.features) {
                         var idName = 'stop' + String(Number(feat) + 1)
-                        var newSect = document.createElement("section")
+                        var newSect = document.createElement('section')
                         newSect.id = idName
-                        var h2Tag = document.createElement("h2")
+                        var h2Tag = document.createElement('h2')
 
-                        var dogTag = document.createElement("div")
+                        var dogTag = document.createElement('div')
                         dogTag.classList.add('quote')
                         dogTag.classList.add('dog')
 
                         var blockquoteTag = document.createElement('blockquote')
                         dogTag.appendChild(blockquoteTag)
 
-                        var personTag = document.createElement("div")
+                        var personTag = document.createElement('div')
                         personTag.classList.add('quote')
                         personTag.classList.add('person')
 
@@ -366,7 +460,7 @@
                         bigSect.appendChild(newSect)
                     }
 
-                    bigSect.append(outro)
+                    //bigSect.append(outro)
 
                     // define mapping for emotion image 
                     const emotMap = {
@@ -393,21 +487,32 @@
                 // dynamically create chapters
                 for (feat in geojsonData.features) {
                     var stopNum = 'stop' + String(Number(feat) + 1)
+
                     var tempObj = {
-                        duration: 2000,
+                        duration: geojsonData.features[feat].properties.duration,
                         zoom: geojsonData.features[feat].properties.zoom,
                         center: geojsonData.features[feat].geometry.coordinates,
                         pitch: geojsonData.features[feat].properties.pitch,
-                        bearing: geojsonData.features[feat].properties.bearing 
+                        bearing: geojsonData.features[feat].properties.bearing,
                     }
+                    if (chapters['stop' + String(Number(feat))].zoom==tempObj.zoom){ //always adjust zoom so that the onzoom is triggered between chapters.
+                    tempObj.zoom=tempObj.zoom+.25
+                    }
+
                     chapters[stopNum] = tempObj
                 }
+                //console.log(chapters)
             })
             .catch(error => console.error('Error fetching CSV:', error));
 
         let activeChapterName = 'stop0';
         function setActiveChapter(chapterName) {
             if (chapterName === activeChapterName) return;
+
+            map.flyTo(chapters[chapterName]);
+            // map.dragPan.disable();
+            // map.keyboard.disable();
+            console.log(chapters[chapterName])
 
             document.getElementById(chapterName).classList.add('active');
             document.getElementById(activeChapterName).classList.remove('active');
@@ -421,33 +526,47 @@
             return bounds.top < window.innerHeight && bounds.bottom > 0;
         }
 
-        window.addEventListener("scrollend", (event) => {
+        // we need to distinguish between a user initiated and programattic zoom event
+        let isProgrammaticScroll = false;
+        window.addEventListener('scrollend', () => {
+            if (isProgrammaticScroll) {
+                // Reset the flag and exit early
+                isProgrammaticScroll = false;
+                return;
+            }
             for (const chapterName in chapters) {
                 console.log(chapterName);
                 if (isElementOnScreen(chapterName)) {
                     setActiveChapter(chapterName);
-                    map.flyTo(chapters[chapterName]);
                     break;
                 }
             }
+            const atBottom = window.scrollHeight - window.clientHeight <= window.scrollTop + 1; // Adding 1px tolerance
+
+            if (atBottom) {
+                // Wrap back to the top
+                window.animate({ scrollTop: 0 }, "fast");
+            }
+            console.log('User scrolled manually');
         });
 
-        // commenting out until bug is resolved
-        // map.addInteraction('stops-interaction', {
-        //     type: 'click',
-        //     target: { layerId: 'csv-points' },
-        //     handler: (e) => {
+        map.addInteraction('stops-interaction', {
+            type: 'click',
+            target: { layerId: 'csv-points' },
+            handler: (e) => {
 
-        //         // Copy coordinates array.
-        //         const coordinates = e.feature.geometry.coordinates.slice();
-        //         const stopId = e.feature.properties.id;
-        //         console.log("stopId", stopId);
+                const stopId = e.feature.properties.id;
+                let chapterName = 'stop' + stopId;
+                isProgrammaticScroll = true;
+                const targetDiv = document.getElementById(chapterName);
+                targetDiv.scrollIntoView({
+                    behavior: 'smooth', // Smoothly animates the scroll
+                    block: 'start'      // Aligns the top of the element to the top of the viewport
+                });
 
-        //         document.getElementById('stop' + stopId).scrollIntoView({ behavior: 'smooth' });
-
-        //     }
-        // });
-
+                setActiveChapter(chapterName);
+            }
+        });
 
         let highlightedFeatureId = null;
         // Create a new popup
@@ -471,14 +590,46 @@
             }
         });
 
-        map.on('zoomend', () => {
+        function arrayOfOne(){
+            console.log(activeChapterName)
+            if (activeChapterName=='stop0'){
+                return NaN
 
-            const center = map.getCenter();
+            }
+            var features=[]
+            var expandedBy=1
+            while (features.length<1){
+                const center = map.getCenter();
+                const screenPoint = map.project(center);
+                const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
+                features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] })
+                expandedBy+=1
+                if (features.length>0){
+                    for (feat in features){
+                        if (activeChapterName == 'stop'+features[feat].properties.id){
+                            console.log('matching numbers','stop'+features[feat].properties.id)
+                        }
+                    }
+                }
+                if (expandedBy>100){
+                    break
+                }
+            }
+            console.log('Iterations',expandedBy)
+            return features
+        }
+        map.on('moveend', () => { //zoomend or moveend
+            console.log('check triggered')
+
+/*             const center = map.getCenter();
             const screenPoint = map.project(center);
-            const features = map.queryRenderedFeatures(screenPoint, { layers: ['csv-points'] });
-            console.log("features", features);
+            var expandedBy=1
+            const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
+            var features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] }); */
 
-           
+            features=arrayOfOne()
+            //console.log('bbox',bbox)
+            console.log("features", features)
 
             if (highlightedFeatureId) {
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
@@ -497,6 +648,7 @@
                 }
 
                 const featureToHighlight = features[0]; // Or your logic to select
+
                 highlightedFeatureId = featureToHighlight.properties.id;
                 console.log(highlightedFeatureId, "highlightedFeatureId");
                 console.log(walkMap[featureToHighlight.properties.walkRank]);
@@ -510,13 +662,13 @@
                         '<h2>What makes the <u>' + featureToHighlight.properties.imageDescript + '</u> <i>' + walkMap[featureToHighlight.properties.walkRank] + '</i> for dog walking?</h2>' +
                         '<p>' + featureToHighlight.properties.walkText + '</p>' +
                     '</div>' +
-                    '<button class="previous round" style="position: absolute; left: 30%; top: 95%;" onclick="changeSlide(-1)">❮</button>' +
-                    '<button class="next round" style="position: absolute; right: 30%; top: 95%;" onclick="changeSlide(1)">❯</button>' +
+                    '<button class="previous round" style="position: absolute; left: 30%" onclick="changeSlide(-1)">❮</button>' +
+                    '<button class="next round" style="position: absolute; right: 30%" onclick="changeSlide(1)">❯</button>' +
                 '</div>';
 
                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
 
-                popup.setLngLat(center) // Set the popup's position
+                popup.setLngLat(map.getCenter()) // Set the popup's position
                     .setHTML(carouselHtml)
                     //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
                     .addTo(map); // Add the popup to the map

@@ -2,11 +2,15 @@ body {
     margin: 0;
     padding: 0;
 }
+p {
+    font-size: 15px;
+}
 #map { 
     position: fixed;
     top: 0;
     bottom: 0;
     width: 60%;
+    border-right: 0.5em solid green;
 }
 .quote {
     display:flex;
@@ -19,7 +23,7 @@ body {
     display:block;
     flex: 0 0 40%;
     padding-left:0.5em;
-    background:url('../assets/Faces/happy-pup.png');
+    background:url('../assets/faces/happy-pup.png');
     /* background-repeat: no-repeat; */
     background-size:cover;
     background-position:center;
@@ -31,7 +35,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/pup-sad.png');
+    background:url('../assets/faces/pup-sad.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -43,7 +47,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/pup-frown.png');
+    background:url('../assets/faces/pup-frown.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -55,7 +59,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/pup-neutral.png');
+    background:url('../assets/faces/pup-neutral.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -67,7 +71,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/pup-smile.png');
+    background:url('../assets/faces/pup-smile.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -79,7 +83,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/pup-happy.png');
+    background:url('../assets/faces/pup-happy.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -91,7 +95,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/person-sad.png');
+    background:url('../assets/faces/person-sad.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -103,7 +107,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/person-frown.png');
+    background:url('../assets/faces/person-frown.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -115,7 +119,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/person-neutral.png');
+    background:url('../assets/faces/person-neutral.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -127,7 +131,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/person-smile.png');
+    background:url('../assets/faces/person-smile.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -139,7 +143,7 @@ body {
     margin-left:1em;
     padding-top:4em;
     padding-bottom:4em;
-    background:url('../assets/Faces/person-happy.png');
+    background:url('../assets/faces/person-happy.png');
     background-repeat: no-repeat;
     background-size:contain;
     background-position:right;
@@ -187,11 +191,11 @@ section.active {
 }
 section:last-child {
     border-bottom: none;
-    margin-bottom: 200px;
+    margin-bottom: 500px;
 }
 .photo {
-    height: 40vh; /* Sets the image height to 40% of the viewport height */
-    width: auto; /* Allows the width to adjust automatically to maintain aspect ratio */
+    /* height: 40vh; Sets the image height to 40% of the viewport height */
+    width: 500px; /* Allows the width to adjust automatically to maintain aspect ratio */
 }
 .face {
     display: block;
@@ -205,17 +209,57 @@ section:last-child {
     border-radius: 10px;
     padding: 15px;
     text-align: center;
+    max-width: 500px; /* Looks about right. Could be set dynamically */
 }
-.previous {
-    background-color: #f1f1f1;
-    color: black;
+.previous, .next {
+    position: absolute;
+    padding: 15px;
+    background-color: green;
+    outline: none;
+    border: none; 
+    color: white;      
+    padding: 6px 8px;        
+    text-decoration: none;     
+    border-radius: 15%;        
+    transition-duration: 0.4s; 
+    cursor: pointer;
+    display: inline-block;           
 }
-  
-.next {
-    background-color: #04AA6D;
-    color: white;
+.previous:hover, .next:hover {
+    background-color: #e9ecef; 
+    color: green;            
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2); 
 }
-  
-.round {
-    border-radius: 50%;
+/* 2. CSS for the Heart Shape */
+.heart-popup .mapboxgl-popup-content {
+    background: transparent; /* Make default box invisible */
+    box-shadow: none;
+    padding: 0;
+}
+
+.heart-popup .mapboxgl-popup-tip {
+    display: none; /* Hide the default triangle tip */
+}
+
+/* Create heart using pseudo-elements */
+.heart-popup .mapboxgl-popup-content::before,
+.heart-popup .mapboxgl-popup-content::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 25px;
+    height: 40px;
+    background: #ff5a5f; /* Heart Color */
+    border-radius: 25px 25px 0 0;
+    transform: rotate(-45deg);
+    transform-origin: 0 100%;
+}
+
+.heart-popup .mapboxgl-popup-content::after {
+    left: 25px;
+    transform: rotate(45deg);
+    transform-origin: 100% 100%;
+}
+img {
+    filter: drop-shadow(5px 5px 10px #9b9b9b);
 }
