@@ -517,7 +517,90 @@
             document.getElementById(chapterName).classList.add('active');
             document.getElementById(activeChapterName).classList.remove('active');
 
+            if (popup.isOpen()) {
+                popup.remove();
+            }
+
             activeChapterName = chapterName;
+
+            map.on('zoomend', () => { //zoomend or moveend
+                console.log('check triggered')
+
+    /*             const center = map.getCenter();
+                const screenPoint = map.project(center);
+                var expandedBy=1
+                const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
+                var features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] }); */
+
+                features=arrayOfOne()
+                //console.log('bbox',bbox)
+                console.log("features", features)
+
+                if (highlightedFeatureId) {
+                    map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
+                    highlightedFeatureId = null;
+                }
+
+                if (features.length === 1) {
+
+                    // define mapping for walking conduciveness 
+                    const walkMap = {
+                        1: 'extremely inconducive',
+                        2: 'somewhat inconducive',
+                        3: 'neither conducive nor inconducive',
+                        4: 'somewhat conducive',
+                        5: 'extremely conducive'
+                    }
+
+                    const featureToHighlight = features[0]; // Or your logic to select
+
+                    highlightedFeatureId = featureToHighlight.properties.id;
+                    console.log(highlightedFeatureId, "highlightedFeatureId");
+                    console.log(walkMap[featureToHighlight.properties.walkRank]);
+
+                    const carouselHtml =
+                    '<div class="carousel-container">' +
+                        '<div class="carousel-slide" style="display: block;">' +
+                            '<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">' +
+                        '</div>' +
+                        '<div class="carousel-slide" style="display: none;">' +
+                            '<h2>What makes the <u>' + featureToHighlight.properties.imageDescript + '</u> <i>' + walkMap[featureToHighlight.properties.walkRank] + '</i> for dog walking?</h2>' +
+                            '<p>' + featureToHighlight.properties.walkText + '</p>' +
+                        '</div>' +
+                        '<button class="previous round" style="position: absolute; left: 30%" onclick="changeSlide(-1)">❮</button>' +
+                        '<button class="next round" style="position: absolute; right: 30%" onclick="changeSlide(1)">❯</button>' +
+                    '</div>';
+
+                    map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
+
+                    popup.setLngLat(map.getCenter()) // Set the popup's position
+                        .setHTML(carouselHtml)
+                        //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+                        .addTo(map); // Add the popup to the map
+                } else if (features.length > 1) {
+                    var lowestId = 9999999
+                    var indexId = 0
+                    var counter = 0
+                    for (feat in features) {
+                        if (lowestId > features[feat].properties.id) {
+                            lowestId = features[feat].properties.id
+                            indexId = counter
+                        }
+                        counter += 1
+                    }
+                    console.log(features[indexId].properties.id)
+                    const featureToHighlight = features[indexId]; // Or your logic to select
+                    highlightedFeatureId = featureToHighlight.properties.id;
+                    console.log(highlightedFeatureId, "highlightedFeatureId");
+
+                    map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
+
+                    // popup.setLngLat(center) // Set the popup's position
+                    //     .setHTML(carouselHtml)
+                    //     //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+                    //     .addTo(map); // Add the popup to the map
+                }
+            });
         }
 
         function isElementOnScreen(id) {
@@ -618,84 +701,85 @@
             console.log('Iterations',expandedBy)
             return features
         }
-        map.on('moveend', () => { //zoomend or moveend
-            console.log('check triggered')
+        // moved into setActive function
+//         map.on('moveend', () => { //zoomend or moveend
+//             console.log('check triggered')
 
-/*             const center = map.getCenter();
-            const screenPoint = map.project(center);
-            var expandedBy=1
-            const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
-            var features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] }); */
+// /*             const center = map.getCenter();
+//             const screenPoint = map.project(center);
+//             var expandedBy=1
+//             const bbox = [[screenPoint.x-expandedBy,screenPoint.y-expandedBy],[screenPoint.x+expandedBy,screenPoint.y+expandedBy]]
+//             var features = map.queryRenderedFeatures(bbox, { layers: ['csv-points'] }); */
 
-            features=arrayOfOne()
-            //console.log('bbox',bbox)
-            console.log("features", features)
+//             features=arrayOfOne()
+//             //console.log('bbox',bbox)
+//             console.log("features", features)
 
-            if (highlightedFeatureId) {
-                map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
-                highlightedFeatureId = null;
-            }
+//             if (highlightedFeatureId) {
+//                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: false });
+//                 highlightedFeatureId = null;
+//             }
 
-            if (features.length === 1) {
+//             if (features.length === 1) {
 
-                // define mapping for walking conduciveness 
-                const walkMap = {
-                    1: 'extremely inconducive',
-                    2: 'somewhat inconducive',
-                    3: 'neither conducive nor inconducive',
-                    4: 'somewhat conducive',
-                    5: 'extremely conducive'
-                }
+//                 // define mapping for walking conduciveness 
+//                 const walkMap = {
+//                     1: 'extremely inconducive',
+//                     2: 'somewhat inconducive',
+//                     3: 'neither conducive nor inconducive',
+//                     4: 'somewhat conducive',
+//                     5: 'extremely conducive'
+//                 }
 
-                const featureToHighlight = features[0]; // Or your logic to select
+//                 const featureToHighlight = features[0]; // Or your logic to select
 
-                highlightedFeatureId = featureToHighlight.properties.id;
-                console.log(highlightedFeatureId, "highlightedFeatureId");
-                console.log(walkMap[featureToHighlight.properties.walkRank]);
+//                 highlightedFeatureId = featureToHighlight.properties.id;
+//                 console.log(highlightedFeatureId, "highlightedFeatureId");
+//                 console.log(walkMap[featureToHighlight.properties.walkRank]);
 
-                const carouselHtml =
-                '<div class="carousel-container">' +
-                    '<div class="carousel-slide" style="display: block;">' +
-                        '<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">' +
-                    '</div>' +
-                    '<div class="carousel-slide" style="display: none;">' +
-                        '<h2>What makes the <u>' + featureToHighlight.properties.imageDescript + '</u> <i>' + walkMap[featureToHighlight.properties.walkRank] + '</i> for dog walking?</h2>' +
-                        '<p>' + featureToHighlight.properties.walkText + '</p>' +
-                    '</div>' +
-                    '<button class="previous round" style="position: absolute; left: 30%" onclick="changeSlide(-1)">❮</button>' +
-                    '<button class="next round" style="position: absolute; right: 30%" onclick="changeSlide(1)">❯</button>' +
-                '</div>';
+//                 const carouselHtml =
+//                 '<div class="carousel-container">' +
+//                     '<div class="carousel-slide" style="display: block;">' +
+//                         '<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">' +
+//                     '</div>' +
+//                     '<div class="carousel-slide" style="display: none;">' +
+//                         '<h2>What makes the <u>' + featureToHighlight.properties.imageDescript + '</u> <i>' + walkMap[featureToHighlight.properties.walkRank] + '</i> for dog walking?</h2>' +
+//                         '<p>' + featureToHighlight.properties.walkText + '</p>' +
+//                     '</div>' +
+//                     '<button class="previous round" style="position: absolute; left: 30%" onclick="changeSlide(-1)">❮</button>' +
+//                     '<button class="next round" style="position: absolute; right: 30%" onclick="changeSlide(1)">❯</button>' +
+//                 '</div>';
 
-                map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
+//                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
 
-                popup.setLngLat(map.getCenter()) // Set the popup's position
-                    .setHTML(carouselHtml)
-                    //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
-                    .addTo(map); // Add the popup to the map
-            } else if (features.length > 1) {
-                var lowestId = 9999999
-                var indexId = 0
-                var counter = 0
-                for (feat in features) {
-                    if (lowestId > features[feat].properties.id) {
-                        lowestId = features[feat].properties.id
-                        indexId = counter
-                    }
-                    counter += 1
-                }
-                console.log(features[indexId].properties.id)
-                const featureToHighlight = features[indexId]; // Or your logic to select
-                highlightedFeatureId = featureToHighlight.properties.id;
-                console.log(highlightedFeatureId, "highlightedFeatureId");
+//                 popup.setLngLat(map.getCenter()) // Set the popup's position
+//                     .setHTML(carouselHtml)
+//                     //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+//                     .addTo(map); // Add the popup to the map
+//             } else if (features.length > 1) {
+//                 var lowestId = 9999999
+//                 var indexId = 0
+//                 var counter = 0
+//                 for (feat in features) {
+//                     if (lowestId > features[feat].properties.id) {
+//                         lowestId = features[feat].properties.id
+//                         indexId = counter
+//                     }
+//                     counter += 1
+//                 }
+//                 console.log(features[indexId].properties.id)
+//                 const featureToHighlight = features[indexId]; // Or your logic to select
+//                 highlightedFeatureId = featureToHighlight.properties.id;
+//                 console.log(highlightedFeatureId, "highlightedFeatureId");
 
-                map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
+//                 map.setFeatureState({ source: 'csv-data', id: highlightedFeatureId }, { highlight: true });
 
-                popup.setLngLat(center) // Set the popup's position
-                    .setHTML(carouselHtml)
-                    //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
-                    .addTo(map); // Add the popup to the map
-            }
-        });
+//                 popup.setLngLat(center) // Set the popup's position
+//                     .setHTML(carouselHtml)
+//                     //.setHTML('<img src="../../' + featureToHighlight.properties.newPath + '" class="photo">')
+//                     .addTo(map); // Add the popup to the map
+//             }
+//         });
     </script>
 
 </body>
