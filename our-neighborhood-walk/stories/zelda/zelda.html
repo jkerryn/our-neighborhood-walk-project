@@ -24,12 +24,12 @@
     <div id="map"></div>
     <div id="features">
         <section id="stop0" class="active">
-            <h1>A Park Walk with Izzy</h1>
+            <h1>A Neighborhood Walk with Zelda</h1>
             <p>
-                On April 22nd, 2026 you and your pup went for a 1+ mile walk, covering varied terrain and departing the Prairie Moraine County Park, which "offers a 79-acre off-leash dog park that is a community favorite and frequently wins local 'best dog park' contests." According to the <a href="https://www.wihealthatlas.org/walkability" target="_blank" rel="noopener noreferrer">Wisconsin Health Atlas</a>, the walkability of this area of Madison is considered "above average." The skies were mostly clear with temperatures in the 70s and a light wind blowing out of the North. Your outing lasted ~30 minutes,
-                logging 7 stops detailed below.
+                On Sunday morning, May 10th, 2026 you and your pup went for a ~2 mile walk, covering varied terrain and departing the Midvale Heights area, which spans over 1000 homes across 600+ acres and has been described by the Community Association as "one of Madison's oldest communities and home to a diverse mix of young families, professionals, and retirees, offering the convenience of suburban living just minutes from downtown." According to the <a href="https://www.wihealthatlas.org/walkability" target="_blank" rel="noopener noreferrer">Wisconsin Health Atlas</a>, the walkability of this area of Madison is considered "above average." The skies were mostly clear with temperatures in the low 50s and a light variable wind. Your outing lasted ~45 minutes,
+                logging 12 stops detailed below.
             </p>
-            <img src="../../img/izzy-banner.jpg" style="width: 500px;"><br>
+            <img src="../../img/zelda-banner.png" style="width: 500px;"><br>
             <h2>Scroll to begin!</h2>
         </section>
         <!-- <section id="stop16">
@@ -51,13 +51,13 @@
             container: 'map',
             // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
             style: 'mapbox://styles/mapbox/outdoors-v12', // style URL
-            center: [-89.5071073614622, 42.95952393006141],
-            padding: 20,
-            zoom: 16,
-            // bounds: [
-            //     [-89.51096433609186, 42.95797632432353], // Southwest coordinates (longitude, latitude)
-            //     [-89.50057186961614, 42.96197456933803]  // Northeast coordinates (longitude, latitude)
-            // ],
+            // center: [-89.45543311383142, 43.05039564015529],
+            padding:5,
+            // zoom: 16,
+            bounds: [
+                [-89.46202756770863, 43.042978940180326], // Southwest coordinates (longitude, latitude)
+                [-89.45001620420254, 43.05666686934121]  // Northeast coordinates (longitude, latitude)
+            ],
             // padding: 20, // Optional: adds padding to the bounds so they don't touch the edge of the map
         });
         // disable all user scroll options
@@ -145,9 +145,12 @@
             'stop0': {
                 bearing: 0,
                 duration: 2000,
-                center: [-89.5071073614622, 42.95952393006141],
+                bounds: [
+                    [-89.46202756770863, 43.042978940180326], // Southwest coordinates (longitude, latitude)
+                    [-89.45001620420254, 43.05666686934121]  // Northeast coordinates (longitude, latitude)
+                ],
                 padding: 20,
-                zoom: 16,
+                // zoom: 16,
                 pitch: 0
             },
             // 'stop16': {
@@ -216,8 +219,8 @@
                                 'interpolate',
                                 ['linear'], // Interpolation method (linear, exponential, cubic-bezier)
                                 ['get', 'hrt'], // The data property to interpolate on
-                                80, '#fc9272', // Input value 80 maps to light red
-                                120, '#99000d' // Input value 100 maps to dark red
+                                90, '#fc9272', // Input value 80 maps to light red
+                                140, '#99000d' // Input value 100 maps to dark red
                             ],
                         }
                     });
@@ -311,7 +314,7 @@
                     map.addSource('dog-route', {
                         type: 'geojson',
                         // Use a URL for the value for the `data` property.
-                        data: 'data/'+RID+'/'+RID+'_dog_fit.geojson'
+                        data: 'data/'+RID+'/'+RID+'_dog_GPX.geojson'
                     });
 
                     // load paw prints for dog route
@@ -522,7 +525,18 @@
             map.flyTo(chapters[chapterName]);
             // map.dragPan.disable();
             // map.keyboard.disable();
-            console.log(chapters[chapterName])
+            console.log(chapters[chapterName]);
+
+            if (chapterName === 'stop0') {
+                map.fitBounds([
+                [-89.46202756770863, 43.042978940180326],
+                [-89.45001620420254, 43.05666686934121]
+                ], {
+                    padding: {top: 10, bottom: 25, left: 15, right: 5},
+                    duration: 2000, // Animation duration in milliseconds
+                    essential: true // Ensures the animation runs even if prefers-reduced-motion is set
+                });
+            }
 
             document.getElementById(chapterName).classList.add('active');
             document.getElementById(activeChapterName).classList.remove('active');
