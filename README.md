@@ -25,7 +25,7 @@ In this project, we explore three interrelated research questions:
     </td>
      <td>
       <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/zelda/zelda.html">
-        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/zelda-card.png)" width="300" alt="Zelda"/>
+        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/zelda-card.png" width="300" alt="Zelda"/>
       </a>
     </td>
   </tr>
