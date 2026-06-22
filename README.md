@@ -10,3 +10,23 @@ In this project, we explore three interrelated research questions:
     (b) enable reflection on/reminiscence about past walks with dogs,
     (c) enhance future interactions with pets and places, and
     (d) increase pet guardians’ trust of their personal data?
+
+<table>
+  <tr>
+    <td>
+      <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/hazel/hazel.html">
+        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/hazel-card.png" width="300" alt="Hazel"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/izzy/izzy.html">
+        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/izzy-card.png" width="300" alt="Izzy"/>
+      </a>
+    </td>
+     <td>
+      <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/zelda/zelda.html">
+        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/zelda-card.png)" width="300" alt="Zelda"/>
+      </a>
+    </td>
+  </tr>
+</table>
