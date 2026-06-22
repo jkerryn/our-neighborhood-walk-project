@@ -15,18 +15,21 @@ In this project, we explore three interrelated research questions:
   <tr>
     <td>
       <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/hazel/hazel.html">
-        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/hazel-card.png" width="300" alt="Hazel"/>
+        <img src="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/hazel-card.png" width="300" alt="Hazel"/>
       </a>
+      <strong>Hazel's Neighborhood Walk</strong><br/>
     </td>
     <td>
       <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/izzy/izzy.html">
-        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/izzy-card.png" width="300" alt="Izzy"/>
+        <img src="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/izzy-card.png" width="300" alt="Izzy"/>
       </a>
+      <strong>Izzy's Neighborhood Walk</strong><br/>
     </td>
      <td>
       <a href="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/stories/zelda/zelda.html">
-        <img src="https://github.com/jkerryn/our-neighborhood-walk-project/blob/main/our-neighborhood-walk/zelda-card.png" width="300" alt="Zelda"/>
+        <img src="https://jkerryn.github.io/our-neighborhood-walk-project/our-neighborhood-walk/zelda-card.png" width="300" alt="Zelda"/>
       </a>
+       <strong>Zelda's Neighborhood Walk</strong><br/>
     </td>
   </tr>
 </table>
