@@ -30,11 +30,11 @@ In this project, we explore three interrelated research questions:
 
 The study adapts a mixed methods approach and consists of three parts:
 <ol>
-  <li>**Onboarding Questionnaire**
+<li><b>Onboarding Questionnaire</b> <br>
 Participants are asked to share information about themselves, their companion dogs, walking environments/routines, and experience using maps and personal tracking technologies.</li>
-<li>**Participant Artifact Collection**
+<li><b>Participant Artifact Collection</b> <br>
 Participants go on walks with their dogs and collect a combination of qualitative (e.g., photographs, text descriptions) and quantitative (e.g., GPS, heart rate) data. This assesses how elements of the built and natural environment affect their personal wellbeing and their dog’s wellbeing.</li>
-<li>**Concluding Questionnaire**
+<li><b>Concluding Questionnaire</b> <br>
 Participants receive an interactive storymap recreating their walking experience and are asked to draft a short reflective response and rate how well indicators of map trust and design describe the storymap. This assesses the extent to which the map fosters new insights into the places while walking together.</li>
 </ol>
 
