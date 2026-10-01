@@ -1,10 +1,14 @@
 # Our Neighborhood Walk Project
 
+## _What can storymaps tell us about human-canine-environment interactions?_
+
 ## Authors
 
 * **Jonathan K Nelson** [jknelson3@wisc.edu](mailto:jknelson3@wisc.edu)
 * **Alton L Hipps** [alhipps@wisc.edu](mailto:alhipps@wisc.edu)
 * **Makinnley Tomberlin** [mdtomberlin@wisc.edu](mailto:mdtomberlin@wisc.edu)
+
+## Project Summary
 
 This project explores the role of cartographic design and personal data visualization in advancing understanding of the dynamic, co-constructed sense-of-place that occurs between human and canine while walking together. Sense-of-place is a geographic concept used to explore how individuals perceive, experience, and develop emotional connections to particular locations. Individuals’ perceptions of the natural and built environment are further shaped by their interactions with companion dogs in those environments. Dogs, too, develop their own sense-of-place based on their personal interests in combination with the route(s) prescribed by their guardians. Sense-of-place and dog walking have important implications for the health and well-being of both pet guardians and canines. Dog walking is an important strategy for promoting physical activity, reducing chronic disease, and increasing environmental awareness. Deeper connections with the environment foster a stronger and more positive sense-of-place, which translates to greater emotional, psychological, and social well-being and promotes community-building.
 
@@ -21,7 +25,20 @@ In this project, we explore three interrelated research questions:
     </ul>
   </li>
 </ul>
-  
+
+## Methods
+
+The study adapts a mixed methods approach and consists of three parts:
+<ol>
+  <li>**Onboarding Questionnaire**
+Participants are asked to share information about themselves, their companion dogs, walking environments/routines, and experience using maps and personal tracking technologies.</li>
+<li>**Participant Artifact Collection**
+Participants go on walks with their dogs and collect a combination of qualitative (e.g., photographs, text descriptions) and quantitative (e.g., GPS, heart rate) data. This assesses how elements of the built and natural environment affect their personal wellbeing and their dog’s wellbeing.</li>
+<li>**Concluding Questionnaire**
+Participants receive an interactive storymap recreating their walking experience and are asked to draft a short reflective response and rate how well indicators of map trust and design describe the storymap. This assesses the extent to which the map fosters new insights into the places while walking together.</li>
+</ol>
+
+## Participants' Storymaps
 
 <table>
   <tr>
